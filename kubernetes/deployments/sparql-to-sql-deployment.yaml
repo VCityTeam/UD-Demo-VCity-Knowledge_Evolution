@@ -38,7 +38,7 @@ spec:
                 configMapKeyRef:
                   name: sparql-to-sql-configmap
                   key: SPRING_DATASOURCE_URL
-          image: sparql-to-sql:0.0.2-SNAPSHOT
+          image: sparql-to-sql
           name: sparql-to-sql
           imagePullPolicy: IfNotPresent # FIXME
           lifecycle:

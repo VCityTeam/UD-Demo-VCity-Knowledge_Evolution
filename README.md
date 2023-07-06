@@ -6,6 +6,15 @@ This work is part of the larger [Virtual City Project](https://projet.liris.cnr
 
 The goal is about thinking about the amount of knowledge developed during the last decade and use it in a multidisciplinary context for understanding city evolution and its capacity to become more sustainable and resilient.
 
+
+#### Kubernetes build
+
+```shell
+eval $(minikube docker-env)
+
+docker build -t sparql-to-sql https://github.com/VCityTeam/SPARQL-to-SQL.git#main
+```
+
 #### Kubernetes deployment
 
 ```shell
