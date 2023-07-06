@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: coder
+  name: coder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: coder
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: coder
+    spec:
+      containers:
+        - env:
+            - name: DOCKER_USER
+              value: $USER
+          image: codercom/code-server:latest
+          name: coder
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: sparql-to-sql-volume
+              readOnly: true
+              mountPath: /home/coder/project
+          ports:
+            - containerPort: 8080
+      restartPolicy: Always
+#      imagePullSecrets:
+#        - name: FIXME
+      volumes:
+        - name: sparql-to-sql-volume
+          persistentVolumeClaim:
+            claimName: sparql-to-sql-volume

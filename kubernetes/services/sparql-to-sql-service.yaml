@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: sparql-to-sql
+  name: sparql-to-sql
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: sparql-to-sql

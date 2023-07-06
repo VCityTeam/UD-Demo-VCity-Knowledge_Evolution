@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: coder
+  name: coder
+spec:
+  ports:
+    - port: 8081
+      targetPort: 8080
+  selector:
+    app: coder

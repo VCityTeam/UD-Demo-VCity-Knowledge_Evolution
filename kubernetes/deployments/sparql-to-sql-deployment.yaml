@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: sparql-to-sql
+  name: sparql-to-sql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sparql-to-sql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: sparql-to-sql
+    spec:
+      containers:
+        - env:
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: sparql-to-sql-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: sparql-to-sql-secret
+                  key: POSTGRES_DB
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sparql-to-sql-secret
+                  key: POSTGRES_PASSWORD
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: sparql-to-sql-configmap
+                  key: SPRING_DATASOURCE_URL
+          image: sparql-to-sql:0.0.2-SNAPSHOT
+          name: sparql-to-sql
+          imagePullPolicy: IfNotPresent # FIXME
+          lifecycle:
+            postStart:
+              exec:
+                command: [ "/bin/sh", "-c", "cp -r /sources/* /shared" ]
+          volumeMounts:
+            - name: sparql-to-sql-volume
+              mountPath: /shared
+            - name: secret-volume
+              readOnly: true
+              mountPath: /etc/secrets
+          ports:
+            - containerPort: 8080
+      restartPolicy: Always
+#      imagePullSecrets:
+#        - name: FIXME
+      volumes:
+        - name: sparql-to-sql-volume
+          persistentVolumeClaim:
+            claimName: sparql-to-sql-volume
+        - name: secret-volume
+          secret:
+            secretName: sparql-to-sql-secret
