@@ -1,0 +1,61 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blazegraph
+spec:
+  selector:
+    matchLabels:
+      app: blazegraph
+  template:
+    metadata:
+      labels:
+        app: blazegraph
+    spec:
+      containers:
+      - name: blazegraph
+        image: vcity/blazegraph-cors
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 8080
+---
+# https://kubernetes.io/docs/concepts/services-networking/service/
+apiVersion: v1
+kind: Service
+metadata:
+  name: blazegraph
+spec:
+  selector:
+    app: blazegraph
+  type: ClusterIP
+  ports:
+  - name: blazegraph
+    protocol: TCP
+    port: 9999
+    targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: blazegraph-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-pagoda3-prod #Automatisation des certificats let's encrypt
+spec:
+  tls:
+  - hosts:
+      - blazegraph.vcity.pagoda.liris.cnrs.fr
+    secretName: vcity-tls
+  rules:
+  - host: blazegraph.vcity.pagoda.liris.cnrs.fr
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: blazegraph
+            port:
+              number: 9999

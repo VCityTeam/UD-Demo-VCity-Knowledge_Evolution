@@ -1,0 +1,73 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quads-query
+spec:
+  selector:
+    matchLabels:
+      app: quads-query
+  template:
+    metadata:
+      labels:
+        app: quads-query
+    spec:
+      containers:
+      - name: quads-query
+        image: harbor.pagoda.os.univ-lyon1.fr/ud-evolution/quads-query
+        env:
+        - name: DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgresql-db-secret
+              key: POSTGRES_PASSWORD
+        - name: DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: postgresql-db-secret
+              key: POSTGRES_USER
+        # missing DATASOURCE_URL
+        resources:
+          limits:
+            memory: "4Gi"
+            cpu: "1G"
+        ports:
+        - containerPort: 8081
+---
+# https://kubernetes.io/docs/concepts/services-networking/service/
+apiVersion: v1
+kind: Service
+metadata:
+  name: quads-query
+spec:
+  selector:
+    app: quads-query
+  type: ClusterIP
+  ports:
+  - name: quads-query
+    protocol: TCP
+    port: 8081
+    targetPort: 8081
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: quads-query-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-pagoda3-prod #Automatisation des certificats let's encrypt
+spec:
+  tls:
+  - hosts:
+      - quads-query.vcity.pagoda.liris.cnrs.fr
+    secretName: vcity-tls
+  rules:
+  - host: quads-query.vcity.pagoda.liris.cnrs.fr
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: quads-query
+            port:
+              number: 8081
