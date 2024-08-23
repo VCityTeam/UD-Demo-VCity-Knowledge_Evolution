@@ -26,7 +26,11 @@ spec:
             secretKeyRef:
               name: postgresql-db-secret
               key: POSTGRES_USER
-        # missing DATASOURCE_URL
+        - name: DATASOURCE_URL
+          valueFrom:
+            secretKeyRef:
+              name: postgresql-db-secret
+              key: DATASOURCE_URL
         resources:
           limits:
             memory: "4Gi"

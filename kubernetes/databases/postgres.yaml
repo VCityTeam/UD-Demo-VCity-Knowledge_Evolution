@@ -46,7 +46,7 @@ spec:
         resources:
           requests:
             storage: 20Gi
-        storageClassName: cinder-retain
+        # storageClassName: cinder-retain
 ---
 apiVersion: v1
 kind: Service
