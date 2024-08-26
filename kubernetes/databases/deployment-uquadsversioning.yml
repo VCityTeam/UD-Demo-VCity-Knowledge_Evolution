@@ -20,7 +20,7 @@ spec:
           value: "true"
         resources:
           limits:
-            memory: "512Mi"
+            memory: "8Gi"
             cpu: "8"
         ports:
         - containerPort: 8080
