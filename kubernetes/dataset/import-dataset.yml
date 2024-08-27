@@ -10,7 +10,7 @@ spec:
         image: ubuntu:latest
         command:
         - |
-          cd /app/data/theor || exit
+          cd /app/data/theoretical || exit
 
           echo "-------------------------------------------------------------- [BEGIN IMPORT TRIPLE] --------------------------------------------------------------"
           printf "\n%s$(date +%FT%T) - [Triple Store] Dataset import started."

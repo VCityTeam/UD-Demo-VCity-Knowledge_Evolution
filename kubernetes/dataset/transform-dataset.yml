@@ -8,7 +8,7 @@ spec:
       containers:
       - name: dataset-transformer
         image: harbor.pagoda.os.univ-lyon1.fr/ud-evolution/quads-creator
-        args: ["/app/data/theor", "/app/data", "*", "ttl", "theoretical", "BSBM"]
+        args: ["/app/data/theoretical", "/app/data", "*", "ttl", "theoretical", "BSBM"]
         volumeMounts:
         - name: converg-dataset-volume
           mountPath: /app/data
