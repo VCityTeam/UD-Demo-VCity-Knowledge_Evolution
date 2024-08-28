@@ -6,14 +6,22 @@ spec:
   template:
     spec:
       containers:
-      - name: dataset-importer
+      - name: dataset-importer-theoretical
         image: ubuntu:latest
-        command: ["/bin/bash", "-c", "apt-get update && apt-get install -y curl && /app/import-dataset.sh"]
+        command: ["/bin/bash", "-c", "apt-get update && apt-get install -y curl && /app/scripts/import-dataset-theoretical.sh"]
         volumeMounts:
         - name: converg-dataset-volume
           mountPath: /app/data
         - name: import-script-configmap-volume
-          mountPath: /app
+          mountPath: /app/scripts
+      - name: dataset-importer-relational
+        image: ubuntu:latest
+        command: ["/bin/bash", "-c", "apt-get update && apt-get install -y curl && /app/scripts/import-dataset-relational.sh"]
+        volumeMounts:
+        - name: converg-dataset-volume
+          mountPath: /app/data
+        - name: import-script-configmap-volume
+          mountPath: /app/scripts
       volumes:
       - name: converg-dataset-volume
         persistentVolumeClaim:

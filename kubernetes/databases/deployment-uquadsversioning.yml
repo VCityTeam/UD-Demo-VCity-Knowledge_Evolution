@@ -18,9 +18,13 @@ spec:
         env:
         - name: BLAZEGRAPH_QUADS
           value: "true"
+        - name: BLAZEGRAPH_TIMEOUT
+          value: "180000"
+        - name: BLAZEGRAPH_MEMORY
+          value: "16G"
         resources:
           limits:
-            memory: "8Gi"
+            memory: "16Gi"
             cpu: "8"
         ports:
         - containerPort: 8080
