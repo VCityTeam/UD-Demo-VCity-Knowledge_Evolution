@@ -17,6 +17,7 @@ execute_job_and_wait() {
 export KUBECONFIG=~/.kube/config-pagoda3.yaml
 
 echo "Make sure that the KUBECONFIG file is up to date."
+echo "The current KUBECONFIG file is: $KUBECONFIG"
 
 kubectl apply -f databases --namespace=ud-evolution
 kubectl apply -f conver-g --namespace=ud-evolution
@@ -30,5 +31,6 @@ execute_job_and_wait dataset-generation-job
 kubectl apply -f dataset/transform-dataset.yml --namespace=ud-evolution
 execute_job_and_wait dataset-transformer-job
 
+kubectl apply -f dataset/import-script-configmap.yml --namespace=ud-evolution
 kubectl apply -f dataset/import-dataset.yml --namespace=ud-evolution
 execute_job_and_wait dataset-importer-job
