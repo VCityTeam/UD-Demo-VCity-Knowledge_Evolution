@@ -3,8 +3,11 @@
 execute_job_and_wait() {
     job_name=$1
     job_completed=false
+    counter=0
     while ! $job_completed; do
-        kubectl wait --for=condition=complete job/$job_name --timeout=30s --namespace=ud-evolution
+        kubectl wait --for=condition=complete job/$job_name --timeout=120s --namespace=ud-evolution
+        counter=$((counter+1))
+        echo "Waited $((counter*120)) seconds..."
         if [[ $? -eq 0 ]]; then
             echo "Job $job_name completed successfully"
             job_completed=true
