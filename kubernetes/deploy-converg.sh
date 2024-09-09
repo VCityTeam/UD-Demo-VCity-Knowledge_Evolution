@@ -14,7 +14,12 @@ execute_job_and_wait() {
 }
 
 # Preparing deployments on Pagoda
-export KUBECONFIG=~/.kube/config-pagoda3.yaml
+if [ "$1" -eq 2 ]; then
+    export KUBECONFIG=~/.kube/config-pagoda
+else
+    export KUBECONFIG=~/.kube/config-pagoda3.yaml
+fi
+
 
 echo "Make sure that the KUBECONFIG file is up to date."
 echo "The current KUBECONFIG file is: $KUBECONFIG"

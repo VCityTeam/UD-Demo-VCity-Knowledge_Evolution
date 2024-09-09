@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: quads-loader
-        image: harbor.pagoda.os.univ-lyon1.fr/ud-evolution/quads-loader
+        image: quads-loader
         env:
         - name: SPRING_DATASOURCE_PASSWORD
           valueFrom:

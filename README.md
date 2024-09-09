@@ -51,6 +51,35 @@ python experiment.py --help
 python experiment.py --versions 1 10 100 1000 --products 5 20 80 350 --variabilities 0 1 10 100
 ```
 
+```mermaid
+flowchart TD
+%% Nodes
+    A("fab:fa-github <a rel="noopener" href="https://github.com/argoproj-labs/hera" target="_blank">Hera workflow</a>")
+    B("fab:fa-github <a rel="noopener" href="https://github.com/argoproj/argo-workflows" target="_blank">Argo workflows Server</a>")
+    C("Argo workflows Controller")
+    D((iterator))
+    subgraph Experiment[<a rel="noopener" href="https://github.com/VCityTeam/ConVer-G" target="_blank">ConVer-G</a>]
+        E(fab:fa-docker <a rel="noopener" href="https://hub.docker.com/r/vcity/quads-loader" target="_blank">Quads Loader</a>)
+        I(fab:fa-docker <a rel="noopener" href="https://hub.docker.com/r/vcity/quads-query" target="_blank">Quads Query</a>)
+        
+        F(fab:fa-docker <a rel="noopener" href="https://github.com/VCityTeam/BSBM" target="_blank">Generate dataset</a>)
+        H(fab:fa-docker <a rel="noopener" href="https://hub.docker.com/r/vcity/quads-creator" target="_blank">Transform dataset</a>)
+        
+        G(fab:fa-docker <a rel="noopener" href="https://hub.docker.com/r/vcity/blazegraph-cors" target="_blank">Blazegraph</a>)
+
+        J(fa:fa-magnifying-glass Query backends)
+    end
+
+%% Edge connections between nodes
+    A --> |submit| B --> C --> D
+    D --> |starts with params| E & G & F
+    D --> |launches queries| J
+    E --> I
+    F --> H --> |Sends dataset| E & G
+    J --> |Sends query| G & I
+```
+
 ## Related Articles
 
 - BDA 2023: [Graph versioning for evolving urban data](https://hal.science/hal-04257528)
+- BDA 2024 [ConVer-G: Concurrent versioning of knowledge graphs](https://hal.science/hal-04690144)

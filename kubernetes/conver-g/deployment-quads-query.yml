@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: quads-query
-        image: harbor.pagoda.os.univ-lyon1.fr/ud-evolution/quads-query
+        image: quads-query
         env:
         - name: DATASOURCE_PASSWORD
           valueFrom:

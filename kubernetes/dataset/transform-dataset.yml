@@ -7,7 +7,7 @@ spec:
     spec:
       containers:
       - name: dataset-transformer-theoretical
-        image: harbor.pagoda.os.univ-lyon1.fr/ud-evolution/quads-creator
+        image: quads-creator
         args: ["/app/data/theoretical", "/app/data", "*", "ttl", "theoretical", "BSBM"]
         volumeMounts:
         - name: converg-dataset-volume
@@ -20,7 +20,7 @@ spec:
             memory: "32Gi"
             cpu: "4"
       - name: dataset-transformer-relational
-        image: harbor.pagoda.os.univ-lyon1.fr/ud-evolution/quads-creator
+        image: quads-creator
         args: ["/app/data/relational", "/app/data", "*", "ttl", "relational", "BSBM"]
         volumeMounts:
         - name: converg-dataset-volume
