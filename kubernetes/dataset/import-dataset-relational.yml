@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: relational-dataset-importer-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: dataset-importer-relational
+        image: ubuntu:latest
+        command: ["/bin/bash", "-c", "apt-get update && apt-get install -y curl && /app/scripts/import-dataset-relational.sh"]
+        volumeMounts:
+        - name: converg-dataset-volume
+          mountPath: /app/data
+        - name: import-script-configmap-volume
+          mountPath: /app/scripts
+      volumes:
+      - name: converg-dataset-volume
+        persistentVolumeClaim:
+          claimName: converg-dataset-pvc
+      - name: import-script-configmap-volume
+        configMap:
+          name: import-script-configmap
+          defaultMode: 0744
+      restartPolicy: Never

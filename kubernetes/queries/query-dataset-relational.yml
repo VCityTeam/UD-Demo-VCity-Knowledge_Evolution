@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: relational-dataset-query-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: dataset-query-relational
+        image: ubuntu:latest
+        command: ["/bin/bash", "-c", "apt-get update && apt-get install -y curl && /app/scripts/query-dataset-relational.sh"]
+        volumeMounts:
+        - name: converg-dataset-volume
+          mountPath: /app/data
+        - name: query-script-configmap-volume
+          mountPath: /app/scripts
+      volumes:
+      - name: converg-dataset-volume
+        persistentVolumeClaim:
+          claimName: converg-dataset-pvc
+      - name: query-script-configmap-volume
+        configMap:
+          name: query-script-configmap
+          defaultMode: 0744
+      restartPolicy: Never

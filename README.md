@@ -41,6 +41,16 @@ kubectl port-forward services/ud-quads-importer 8080:8080
 kubectl port-forward services/postgres 5432:5432
 ```
 
+### Hera workflow
+    
+```shell
+# print the help
+python experiment.py --help
+
+# execute the experiment
+python experiment.py --versions 1 10 100 1000 --products 5 20 80 350 --variabilities 0 1 10 100
+```
+
 ## Related Articles
 
 - BDA 2023: [Graph versioning for evolving urban data](https://hal.science/hal-04257528)

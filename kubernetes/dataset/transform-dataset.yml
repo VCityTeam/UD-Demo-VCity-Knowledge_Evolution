@@ -13,8 +13,11 @@ spec:
         - name: converg-dataset-volume
           mountPath: /app/data
         resources:
+          requests:
+            memory: "16Gi"
+            cpu: "4"
           limits:
-            memory: "8Gi"
+            memory: "32Gi"
             cpu: "4"
       - name: dataset-transformer-relational
         image: harbor.pagoda.os.univ-lyon1.fr/ud-evolution/quads-creator
@@ -23,8 +26,11 @@ spec:
         - name: converg-dataset-volume
           mountPath: /app/data
         resources:
+          requests:
+            memory: "16Gi"
+            cpu: "4"
           limits:
-            memory: "8Gi"
+            memory: "32Gi"
             cpu: "4"
       volumes:
       - name: converg-dataset-volume

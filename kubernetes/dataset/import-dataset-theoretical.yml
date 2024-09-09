@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: dataset-importer-job
+  name: theoretical-dataset-importer-job
 spec:
   template:
     spec:
@@ -9,14 +9,6 @@ spec:
       - name: dataset-importer-theoretical
         image: ubuntu:latest
         command: ["/bin/bash", "-c", "apt-get update && apt-get install -y curl && /app/scripts/import-dataset-theoretical.sh"]
-        volumeMounts:
-        - name: converg-dataset-volume
-          mountPath: /app/data
-        - name: import-script-configmap-volume
-          mountPath: /app/scripts
-      - name: dataset-importer-relational
-        image: ubuntu:latest
-        command: ["/bin/bash", "-c", "apt-get update && apt-get install -y curl && /app/scripts/import-dataset-relational.sh"]
         volumeMounts:
         - name: converg-dataset-volume
           mountPath: /app/data
