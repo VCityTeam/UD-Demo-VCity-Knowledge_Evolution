@@ -6,9 +6,9 @@ spec:
   template:
     spec:
       containers:
-      - name: dataset-transformer-theoretical
-        image: quads-creator
-        args: ["/app/data/theoretical", "/app/data", "*", "ttl", "theoretical", "BSBM"]
+      - name: dataset-transformer-relational
+        image: vcity/quads-creator
+        args: ["/app/data/relational", "/app/data", "*", "relational", "BSBM"]
         volumeMounts:
         - name: converg-dataset-volume
           mountPath: /app/data
@@ -19,9 +19,9 @@ spec:
           limits:
             memory: "32Gi"
             cpu: "4"
-      - name: dataset-transformer-relational
-        image: quads-creator
-        args: ["/app/data/relational", "/app/data", "*", "ttl", "relational", "BSBM"]
+      - name: dataset-transformer-theoretical
+        image: vcity/quads-creator
+        args: ["/app/data/theoretical", "/app/data", "*", "theoretical", "BSBM"]
         volumeMounts:
         - name: converg-dataset-volume
           mountPath: /app/data

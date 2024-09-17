@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: quads-loader
-        image: quads-loader
+        image: vcity/quads-loader
         env:
         - name: SPRING_DATASOURCE_PASSWORD
           valueFrom:
@@ -62,10 +62,10 @@ metadata:
 spec:
   tls:
   - hosts:
-      - quads-loader.vcity.pagoda.liris.cnrs.fr
-    secretName: vcity-tls
+      - quads-loader.ud-evolution.pagoda.liris.cnrs.fr
+    secretName: ud-evolution-tls
   rules:
-  - host: quads-loader.vcity.pagoda.liris.cnrs.fr
+  - host: quads-loader.ud-evolution.pagoda.liris.cnrs.fr
     http:
       paths:
       - path: /

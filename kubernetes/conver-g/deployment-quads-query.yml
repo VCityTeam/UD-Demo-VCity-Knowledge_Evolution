@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: quads-query
-        image: quads-query
+        image: vcity/quads-query
         env:
         - name: DATASOURCE_PASSWORD
           valueFrom:
@@ -62,10 +62,10 @@ metadata:
 spec:
   tls:
   - hosts:
-      - quads-query.vcity.pagoda.liris.cnrs.fr
-    secretName: vcity-tls
+      - quads-query.ud-evolution.pagoda.liris.cnrs.fr
+    secretName: ud-evolution-tls
   rules:
-  - host: quads-query.vcity.pagoda.liris.cnrs.fr
+  - host: quads-query.ud-evolution.pagoda.liris.cnrs.fr
     http:
       paths:
       - path: /

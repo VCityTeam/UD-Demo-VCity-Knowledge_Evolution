@@ -53,10 +53,10 @@ metadata:
 spec:
   tls:
   - hosts:
-      - blazegraph.vcity.pagoda.liris.cnrs.fr
-    secretName: vcity-tls
+      - blazegraph.ud-evolution.pagoda.liris.cnrs.fr
+    secretName: ud-evolution-tls
   rules:
-  - host: blazegraph.vcity.pagoda.liris.cnrs.fr
+  - host: blazegraph.ud-evolution.pagoda.liris.cnrs.fr
     http:
       paths:
       - path: /

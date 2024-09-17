@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hera-utils-proxy-environment
+data:
+  HTTPS_PROXY: "http://proxy.univ-lyon1.fr:3128"
+  https_proxy: "http://proxy.univ-lyon1.fr:3128"
+  HTTP_PROXY: "http://proxy.univ-lyon1.fr:3128"
+  http_proxy: "http://proxy.univ-lyon1.fr:3128"
+  NO_PROXY: "192.168.0.0/24,.liris.cnrs.fr,.univ-lyon1.fr,10.43.0.0/16,10.42.0.0/16,.cluster.local"
+  no_proxy: "192.168.0.0/24,.liris.cnrs.fr,.univ-lyon1.fr,10.43.0.0/16,10.42.0.0/16,.cluster.local"
