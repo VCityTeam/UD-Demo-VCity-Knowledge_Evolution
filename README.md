@@ -14,6 +14,23 @@ The goal is about thinking about the amount of knowledge developed during the la
 ### Kubernetes deployment
 #### Deploy
 
+Quickstart:
+
+```shell
+# inside the kubernetes folder
+# ./deploy-converg.sh <k8s config file path> <?args>
+
+./deploy-converg.sh ~/.kube/config-pagoda3.yaml --deploy --generation --transformation --import --query
+```
+
+Args:
+- `--deploy`: deploy the Blazegraph and ConVer-G components
+- `--generation`: deploy the dataset generation job
+- `--transformation`: deploy the dataset transformation job
+- `--import`: deploy the dataset import job
+- `--query`: deploy the dataset query job
+
+Details:
 ```shell
 export KUBE_DOCKER_REGISTRY=<your docker registry>
 export KUBECONFIG=<your kubernetes config file>
@@ -24,6 +41,24 @@ kubectl apply -f ./kubernetes/databases
 ```
 
 #### Stop
+
+Quickstart:
+
+```shell
+# inside the kubernetes folder
+# ./delete-converg.sh <k8s config file path> <?args>
+
+./delete-converg.sh ~/.kube/config-pagoda3.yaml --deploy --generation --transformation --import --query
+```
+
+Args:
+- `--deploy`: deploy the Blazegraph and ConVer-G components
+- `--generation`: deploy the dataset generation job
+- `--transformation`: deploy the dataset transformation job
+- `--import`: deploy the dataset import job
+- `--query`: deploy the dataset query job
+
+Details:
 
 ```shell
 # at the root of the project

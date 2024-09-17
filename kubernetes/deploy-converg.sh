@@ -13,59 +13,70 @@ execute_job_and_wait() {
     done
 }
 
-# Preparing deployments on Pagoda
-if [ "$1" -eq 2 ]; then
-    export KUBECONFIG=~/.kube/config-pagoda
-else
-    export KUBECONFIG=~/.kube/config-pagoda3.yaml
+export KUBECONFIG=$1
+echo "Using Pagoda $1 KUBECONFIG file"
+
+# check if --deploy flag is part of the command parameters
+if [[ "$*" == *--deploy* ]]; then
+    # Deploying the databases (Blazegraph and Postgres) and the Converg components
+    kubectl apply -f databases --namespace=ud-evolution
+    kubectl apply -f conver-g --namespace=ud-evolution
+
+    # Handmade workflow
+    kubectl apply -f dataset/dataset-pvc.yml --namespace=ud-evolution
+
+    echo "Blazegraph and ConverG components have been deployed"
 fi
 
+# check if --generation flag is part of the command parameters
+if [[ "$*" == *--generation* ]]; then
+    ## Dataset generation
+    kubectl apply -f dataset/generate-dataset.yml --namespace=ud-evolution
+    execute_job_and_wait dataset-generation-job
 
-echo "Make sure that the KUBECONFIG file is up to date."
-echo "The current KUBECONFIG file is: $KUBECONFIG"
+    echo "Dataset has been generated"
+fi
 
-# Deploying the databases (Blazegraph and Postgres) and the Converg components
-kubectl apply -f databases --namespace=ud-evolution
-kubectl apply -f conver-g --namespace=ud-evolution
+# check if --transformation flag is part of the command parameters
+if [[ "$*" == *--transformation* ]]; then
+    ## Dataset transformation
+    kubectl apply -f dataset/transform-dataset.yml --namespace=ud-evolution
+    execute_job_and_wait dataset-transformer-job
 
-# Handmade workflow
-kubectl apply -f dataset/dataset-pvc.yml --namespace=ud-evolution
+    echo "Dataset has been transformed"
+fi
 
-echo "Dataset is ready to be generated"
+# check if --import flag is part of the command parameters
+if [[ "$*" == *--import* ]]; then
+    ## Create the import script
+    kubectl apply -f dataset/import-script-configmap.yml --namespace=ud-evolution
 
-## Dataset generation
-kubectl apply -f dataset/generate-dataset.yml --namespace=ud-evolution
-execute_job_and_wait dataset-generation-job
+    ## Dataset import (relational: Postgres + ConverG)
+    kubectl apply -f dataset/import-dataset-relational.yml --namespace=ud-evolution
+    execute_job_and_wait relational-dataset-importer-job
 
-echo "Dataset is ready to be transformed"
+    ## Dataset import (theoretical: Blazegraph)
+    kubectl apply -f dataset/import-dataset-theoretical.yml --namespace=ud-evolution
+    execute_job_and_wait theoretical-dataset-importer-job
 
-## Dataset transformation
-kubectl apply -f dataset/transform-dataset.yml --namespace=ud-evolution
-execute_job_and_wait dataset-transformer-job
+    echo "Dataset has been imported"
+fi
 
-echo "Dataset is ready to be imported"
+# check if --query flag is part of the command parameters
+if [[ "$*" == *--query* ]]; then
+    # Query dataset
+    ## Create query scripts
+    kubectl apply -f queries/blazegraph-queries-configmap.yml --namespace=ud-evolution
+    kubectl apply -f queries/converg-queries-configmap.yml --namespace=ud-evolution
+    kubectl apply -f queries/query-script-configmap.yml --namespace=ud-evolution
 
-## Create the import script
-kubectl apply -f dataset/import-script-configmap.yml --namespace=ud-evolution
+    ## Query blazegraph
+    kubectl apply -f queries/query-dataset-theoretical.yml --namespace=ud-evolution
+    execute_job_and_wait theoretical-dataset-query-job
 
-## Dataset import (relational: Postgres + ConverG)
-kubectl apply -f dataset/import-dataset-relational.yml --namespace=ud-evolution
-execute_job_and_wait relational-dataset-importer-job
+    ## Query ConVerG
+    kubectl apply -f queries/query-dataset-relational.yml --namespace=ud-evolution
+    execute_job_and_wait relational-dataset-query-job
 
-## Dataset import (theoretical: Blazegraph)
-kubectl apply -f dataset/import-dataset-theoretical.yml --namespace=ud-evolution
-execute_job_and_wait theoretical-dataset-importer-job
-
-# Query dataset
-## Create query scripts
-kubectl apply -f queries/blazegraph-queries-configmap.yml --namespace=ud-evolution
-kubectl apply -f queries/converg-queries-configmap.yml --namespace=ud-evolution
-kubectl apply -f queries/query-script-configmap.yml --namespace=ud-evolution
-
-## Query blazegraph
-kubectl apply -f queries/query-dataset-theoretical.yml --namespace=ud-evolution
-execute_job_and_wait theoretical-dataset-query-job
-
-## Query ConVerG
-kubectl apply -f queries/query-dataset-relational.yml --namespace=ud-evolution
-execute_job_and_wait relational-dataset-query-job
+    echo "Dataset has been queried"
+fi
