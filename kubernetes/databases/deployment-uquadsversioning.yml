@@ -21,10 +21,10 @@ spec:
         - name: BLAZEGRAPH_TIMEOUT
           value: "180000"
         - name: BLAZEGRAPH_MEMORY
-          value: "16G"
+          value: "32G"
         resources:
           limits:
-            memory: "16Gi"
+            memory: "32Gi"
             cpu: "8"
         ports:
         - containerPort: 8080

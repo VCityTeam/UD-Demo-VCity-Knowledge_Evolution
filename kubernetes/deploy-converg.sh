@@ -13,6 +13,13 @@ execute_job_and_wait() {
     done
 }
 
+# Check if there are at least 2 parameters
+if [ "$#" -lt 2 ]; then
+    echo "Usage: $0 <KUBECONFIG_FILE> --deploy --generation --transformation --import --query"
+    echo "Example: $0 ~/.kube/config-pagoda3.yaml --deploy --generation --transformation --import --query"
+    exit 1
+fi
+
 export KUBECONFIG=$1
 echo "Using Pagoda $1 KUBECONFIG file"
 
@@ -53,10 +60,10 @@ if [[ "$*" == *--import* ]]; then
 
     ## Dataset import (relational: Postgres + ConverG)
     kubectl apply -f dataset/import-dataset-relational.yml --namespace=ud-evolution
-    execute_job_and_wait relational-dataset-importer-job
-
     ## Dataset import (theoretical: Blazegraph)
     kubectl apply -f dataset/import-dataset-theoretical.yml --namespace=ud-evolution
+
+    execute_job_and_wait relational-dataset-importer-job
     execute_job_and_wait theoretical-dataset-importer-job
 
     echo "Dataset has been imported"

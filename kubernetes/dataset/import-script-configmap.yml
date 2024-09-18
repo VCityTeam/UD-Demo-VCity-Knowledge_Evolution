@@ -16,7 +16,6 @@ data:
         start=$(date +%s%3N)
         curl -X POST --location 'http://blazegraph:9999/blazegraph/sparql' \
             --header 'Content-Type:application/x-trig' \
-            --connect-timeout 180 \
             --data-binary @"$file"
         end=$(date +%s%3N)
         printf "\n%s$(date +%FT%T) - [Measure] (Import BG $file):$((end - start))ms;"
@@ -40,7 +39,6 @@ data:
         start=$(date +%s%3N)
         curl --location 'http://quads-loader:8080/import/version' \
           --header 'Content-Type: multipart/form-data' \
-          --connect-timeout 180 \
           --form file=@"$file"
         end=$(date +%s%3N)
         printf "\n%s$(date +%FT%T) - [Measure] (Import STS $file):$((end-start))ms;"

@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Check if there are at least 2 parameters
+if [ "$#" -lt 2 ]; then
+    echo "Usage: $0 <KUBECONFIG_FILE> --deploy --generation --transformation --import --query"
+    echo "Example: $0 ~/.kube/config-pagoda3.yaml --deploy --generation --transformation --import --query"
+    exit 1
+fi
+
 export KUBECONFIG=$1
 echo "Using Pagoda $1 KUBECONFIG file"
 
