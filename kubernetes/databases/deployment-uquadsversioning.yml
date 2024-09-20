@@ -54,7 +54,7 @@ spec:
   tls:
   - hosts:
       - blazegraph.ud-evolution.pagoda.liris.cnrs.fr
-    secretName: ud-evolution-tls
+    secretName: ud-evolution-blazegraph-tls
   rules:
   - host: blazegraph.ud-evolution.pagoda.liris.cnrs.fr
     http:

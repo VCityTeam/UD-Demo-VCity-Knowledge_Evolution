@@ -63,7 +63,7 @@ spec:
   tls:
   - hosts:
       - quads-query.ud-evolution.pagoda.liris.cnrs.fr
-    secretName: ud-evolution-tls
+    secretName: ud-evolution-quaque-tls
   rules:
   - host: quads-query.ud-evolution.pagoda.liris.cnrs.fr
     http:
