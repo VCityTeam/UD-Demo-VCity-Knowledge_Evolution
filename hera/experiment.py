@@ -107,6 +107,102 @@ def does_the_mounted_appear_in_list(
     print(f"Persisted volume directory file access check: {filenames}")
     print(f"The persisted volume directory {mount_path} was properly mounted.")
 
+def dbs_create(combinations) -> list[tuple[str, str, int, int, int, int]]:
+    dbs_containers_name = []
+
+    for postgres, blazegraph, version, product, step, variability in combinations:
+        postgres_container_name = f'{rename_resource(postgres)}-{layout.create_database_identifier(version, product, step, variability)}'
+        blazegraph_container_name = f'{rename_resource(blazegraph)}-{layout.create_database_identifier(version, product, step, variability)}'
+
+        Container(
+            name=postgres_container_name,
+            image=postgres,
+            image_pull_policy=models.ImagePullPolicy.always,
+            daemon=True,
+            env=[
+                Env(
+                    name="POSTGRES_DB",
+                    value=layout.database_name(version, product, step, variability),
+                ),
+                Env(name="POSTGRES_PASSWORD", value="password"), # FIXME: Use a secret
+                Env(name="POSTGRES_USER", value="user"), # FIXME: Use a secret
+                Env(name="PGDATA", value=environment.database_data(version, product, step, variability)),
+            ],
+            env_from=[
+                # Assumes the corresponding config map is defined at k8s level
+                ConfigMapEnvFrom(
+                    name=environment.cluster.configmap,
+                    optional=False,
+                )
+            ],
+        )
+        Container(
+            name=blazegraph_container_name,
+            image=blazegraph,
+            image_pull_policy=models.ImagePullPolicy.always,
+            daemon=True,
+            env=[
+                Env(
+                    name="BLAZEGRAPH_QUADS",
+                    value="true",
+                ),
+                Env(name="BLAZEGRAPH_TIMEOUT", value="180000"),
+                Env(name="BLAZEGRAPH_MEMORY", value="32G"),
+            ]
+        )
+        dbs_containers_name.append([postgres_container_name, blazegraph_container_name, version, product, step, variability])
+
+    return dbs_containers_name
+
+@script()
+def print_environment(arguments: object):
+    import json
+
+    print("Printing workflow arguments:")
+    print("arguments: ", json.dumps(arguments, indent=4))
+
+@script()
+def print_instance_args(arguments: object):
+    import json
+
+    print("Printing instance arguments:")
+    print("arguments: ", json.dumps(arguments, indent=4))
+
+def generate_db_instances(arguments: object, images: dict[str, str]) -> list[tuple[str, str, int, int, int, int]]:
+    from itertools import product
+
+    # generate the instances: it has to be all combinations of the arguments
+    combinations = list(product(
+        arguments["versions"],
+        arguments["products"],
+        arguments["steps"],
+        arguments["variabilities"]
+    ))
+
+    return [
+            (
+                images.get("postgres"),
+                images.get("blazegraph"),
+                version,
+                product,
+                step,
+                variability
+            )
+        for (version, product, step, variability) in combinations
+    ]
+
+
+@script()
+def consume(version: int, product: int, step: int, variability: int, postgres: str, blazegraph: str):
+    print("Received version={version}, product={product}, step={step}, variability={variability}"
+          .format(version=version, product=product, step=step, variability=variability)
+    )
+
+def rename_resource(base_name: str) -> str:
+    # Transform the base name into a valid k8s resource name
+    # keeps only the first part of the name until the first '@' (the sha256 part, if any)
+    return base_name.replace(":", "-").replace("/", "-").split("@")[0]
+
 if __name__ == "__main__":
     # A workflow that tests whether the defined environment is correct as
     # seen and used from within the Argo server engine (at Workflow runtime)
@@ -115,8 +211,9 @@ if __name__ == "__main__":
     from parse_arguments import parse_arguments
     from environment import environment
     from hera.workflows import (
+        Task,
+        DAG,
         Container,
-        Steps,
         ConfigMapEnvFrom,
         Workflow,
         Env,
@@ -128,60 +225,48 @@ if __name__ == "__main__":
     environment = environment(args)
     layout = experiment_layout.layout()
 
-    # with Workflow(
-    #     generate_name="hera-steps-with-collable-container-",
-    #     entrypoint="sequence-entry",
-    # ) as w:
-    #     whalesay = Container(  # Container must be callable
-    #         name="whalesay",
-    #         inputs=[Parameter(name="message")],
-    #         image="docker/whalesay",
-    #         command=["cowsay"],
-    #         args=["{{inputs.parameters.message}}"],
-    #     )
-    #     with Steps(name="sequence-entry") as s:
-    #         whalesay(
-    #             name="hello-1",
-    #             arguments=[Parameter(name="message", value="Hello 1.")],
-    #         )
-    #         whalesay(
-    #             name="hello-2",
-    #             arguments=[Parameter(name="message", value="Hello 2.")],
-    #         )
+    # # Define the images to be used in the workflow
+    images = {
+        "postgres": "postgres@sha256:4ec37d2a07a0067f176fdcc9d4bb633a5724d2cc4f892c7a2046d054bb6939e5",
+        "blazegraph": "vcity/blazegraph-cors@sha256:c6f9556ca53ff01304557e349d2f10b3e121dae7230426f4c64fa42b2cbaf805",
+        "quader": "",
+        "quaque": "",
+    }
+
+    # # Map the arguments to be used in the workflow
+    arguments = {
+        "versions": args.versions,
+        "products": args.products,
+        "steps": args.steps,
+        "variabilities": args.variabilities
+    }
+
+    #   pg = dbr_create(images.get("postgres"), version, product, step, variability)
 
     with Workflow(generate_name="converg-experiment-", entrypoint="converg-step") as w:
-        version = "1"
-        product = "1"
-        step = "1"
-        variability = "1"
-        pg = Container(
-            name="postgres-" + layout.create_database_identifier(version, product, step, variability),
-            image="postgres:16.2",
-            image_pull_policy=models.ImagePullPolicy.always,
-            daemon=True,
-            env=[
-                Env(
-                    name="POSTGRES_DB",
-                    value=layout.database_name(version, product, step, variability),
-                ),
-                Env(name="POSTGRES_PASSWORD", value="password"), # FIXME: Use a secret
-                Env(name="POSTGRES_USER", value="user"), # FIXME: Use a secret
-            ],
-            env_from=[
-                # Assumes the corresponding config map is defined at k8s level
-                ConfigMapEnvFrom(
-                    name=environment.cluster.configmap,
-                    optional=False,
-                )
-            ],
-        )
+        dbs_combinations = generate_db_instances(arguments, images)
+        # function building all the database containers
+        dbs = dbs_create(dbs_combinations)
 
-        with Steps(name="converg-step") as s:
-            pg()
+        with DAG(name="converg-step"):
+            print_env = print_environment(name="print-environment", arguments={"arguments": arguments})
+            
+            for [pg, bg, version, product, step, variability] in dbs:
+                instance_args = {
+                    "version": version,
+                    "product": product,
+                    "step": step,
+                    "variability": variability
+                }
+                print_inst = print_instance_args(name=f'print-instance-args-{version}-{product}-{step}-{variability}', arguments={"arguments": instance_args})
+                
+                # init all the databases (postgresql and blazegraph)
+                task_pg = Task(name=f'{pg}-task', template=pg)
+                task_bg = Task(name=f'{bg}-task', template=pg)
 
+
+
+                print_env >> print_inst >> [task_pg, task_bg]
+            # c = consume(with_param=g.result)
+        
         w.create()
-        # Create an DAG/Sequence for each version, product, step, and variability
-        # for version in args.versions:
-        #     for product in args.products:
-        #         for step in args.steps:
-        #             for variability in args.variabilities:

@@ -3,6 +3,8 @@ from hera_utils import num_exp_environment, Struct
 
 
 class environment(num_exp_environment):
+    def database_data(self, version, product, step, variability):
+        return f"{self.persisted_volume.mount_path}/{version}-{product}-{step}-{variability}"
 
     def __init__(self, args, verbose=False):
 
