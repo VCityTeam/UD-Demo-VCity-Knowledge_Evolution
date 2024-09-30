@@ -4,7 +4,7 @@ from hera.workflows import (
     Parameter,
     script,
 )
-
+from configuration import configuration
 
 @script(
     env_from=[
@@ -107,10 +107,10 @@ def does_the_mounted_appear_in_list(
     print(f"Persisted volume directory file access check: {filenames}")
     print(f"The persisted volume directory {mount_path} was properly mounted.")
 
-def create_dbs_containers(combinations, constants) -> None:
-    for version, product, step, variability in combinations:
-        postgres_container_name = layout.create_postgres_container_name(version, product, step, variability)
-        blazegraph_container_name = layout.create_blazegraph_container_name(version, product, step, variability)
+def create_dbs_containers(configurations: list, constants) -> None:
+    for configuration in configurations:
+        postgres_container_name = layout.create_postgres_container_name(configuration)
+        blazegraph_container_name = layout.create_blazegraph_container_name(configuration)
 
         Container(
             name=postgres_container_name,
@@ -120,11 +120,11 @@ def create_dbs_containers(combinations, constants) -> None:
             env=[
                 Env(
                     name="POSTGRES_DB",
-                    value=layout.create_database_identifier(version, product, step, variability),
+                    value=layout.create_database_identifier(configuration),
                 ),
                 Env(name="POSTGRES_PASSWORD", value="password"), # FIXME: Use a secret
                 Env(name="POSTGRES_USER", value="user"), # FIXME: Use a secret
-                Env(name="PGDATA", value=environment.database_data(version, product, step, variability)),
+                Env(name="PGDATA", value=environment.database_data(configuration)),
             ],
             env_from=[
                 # Assumes the corresponding config map is defined at k8s level
@@ -149,6 +149,17 @@ def create_dbs_containers(combinations, constants) -> None:
             ]
         )
 
+def create_datasets_containers(configurations: list, constants) -> None:
+    for configuration in configurations:
+        bsbm_container_name = layout.create_bsbm_container_name(configuration)
+
+        Container(
+            name=bsbm_container_name,
+            image=constants.bsbm,
+            image_pull_policy=models.ImagePullPolicy.always,
+            args=["generate-n", configuration.version, configuration.product, configuration.step, configuration.variability]
+        )
+
 @script()
 def print_environment(parameters: object):
     import json
@@ -163,11 +174,11 @@ def print_instance_args(arguments: object):
     print("Printing instance arguments:")
     print("arguments: ", json.dumps(arguments, indent=4))
 
-def generate_parameters_combination(parameters: object) -> list[tuple[str, str, int, int, int, int]]:
+def generate_databases_configurations(parameters: object) -> list:
     from itertools import product
 
     # generate the instances: it has to be all combinations of the arguments
-    combinations = list(product(
+    configurations = list(product(
         parameters["versions"],
         parameters["products"],
         parameters["steps"],
@@ -175,34 +186,35 @@ def generate_parameters_combination(parameters: object) -> list[tuple[str, str, 
     ))
 
     return [
-            (
+            configuration(
                 version,
                 product,
                 step,
                 variability
             )
-        for (version, product, step, variability) in combinations
+        for (version, product, step, variability) in configurations
     ]
 
-def generate_dataset_instances(arguments: object) -> list[tuple[str, str, int, int, int, int]]:
+def generate_datasets_configurations(arguments: object) -> list:
     from itertools import product
 
-    combinations = list(product(
+    versions = [max(arguments["versions"])]
+
+    configurations = list(product(
+        versions,
         arguments["products"],
         arguments["steps"],
         arguments["variabilities"]
     ))
 
-    version = max(arguments["versions"])
-
     return [
-            (
+            configuration(
                 version,
                 product,
                 step,
                 variability
             )
-        for (product, step, variability) in combinations
+        for (version, product, step, variability) in configurations
     ]
 
 
@@ -243,29 +255,49 @@ if __name__ == "__main__":
         "variabilities": args.variabilities
     }
 
-    dbs_combinations = generate_parameters_combination(parameters)
+    dbs_configurations = generate_databases_configurations(parameters)
+    datasets_configurations = generate_datasets_configurations(parameters)
 
     with Workflow(generate_name="converg-experiment-", entrypoint="converg-step") as w:
         # function building all the database containers
-        create_dbs_containers(dbs_combinations, constants)
+        create_dbs_containers(dbs_configurations, constants)
+        create_datasets_containers(datasets_configurations, constants)
 
         with DAG(name="converg-step"):
             print_env = print_environment(name="print-environment", arguments={"parameters": parameters})
-            
-            for [version, product, step, variability] in dbs_combinations:
+
+            for ds_configuration in datasets_configurations:
                 instance_args = {
-                    "version": version,
-                    "product": product,
-                    "step": step,
-                    "variability": variability,
+                    "version": ds_configuration.version,
+                    "product": ds_configuration.product,
+                    "step": ds_configuration.step,
+                    "variability": ds_configuration.variability,
                     "postgres": constants.postgres,
                     "blazegraph": constants.blazegraph
                 }
-                print_inst = print_instance_args(name=f'print-instance-args-{version}-{product}-{step}-{variability}', arguments={"arguments": instance_args})
+                print_inst = print_instance_args(name=f'print-ds-instance-args-{str(ds_configuration)}', arguments={"arguments": instance_args})
+
+                # init all the datasets (bsbm)
+                bsbm_container_name = layout.create_bsbm_container_name(ds_configuration)
+
+                task_bsbm = Task(name=f'{bsbm_container_name}-task', template=bsbm_container_name)
+
+                print_env >> print_inst >> task_bsbm
+            
+            for db_configuration in dbs_configurations:
+                instance_args = {
+                    "version": db_configuration.version,
+                    "product": db_configuration.product,
+                    "step": db_configuration.step,
+                    "variability": db_configuration.variability,
+                    "postgres": constants.postgres,
+                    "blazegraph": constants.blazegraph
+                }
+                print_inst = print_instance_args(name=f'print-db-instance-args-{str(db_configuration)}', arguments={"arguments": instance_args})
                 
                 # init all the databases (postgresql and blazegraph)
-                postgres_container_name = layout.create_postgres_container_name(version, product, step, variability)
-                blazegraph_container_name = layout.create_blazegraph_container_name(version, product, step, variability)
+                postgres_container_name = layout.create_postgres_container_name(db_configuration)
+                blazegraph_container_name = layout.create_blazegraph_container_name(db_configuration)
 
                 task_pg = Task(name=f'{postgres_container_name}-task', template=postgres_container_name)
                 task_bg = Task(name=f'{blazegraph_container_name}-task', template=blazegraph_container_name)

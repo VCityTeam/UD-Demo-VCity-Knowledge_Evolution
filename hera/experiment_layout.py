@@ -8,17 +8,21 @@ class layout:
         return base_name.replace(":", "-").replace("/", "-").split("@")[0]
 
     @staticmethod
-    def create_container_name(constant, version, product, step, variability):
-        return f'{layout.rename_resource(constant)}-{layout.create_database_identifier(version, product, step, variability)}'
+    def create_container_name(constant, configuration):
+        return f'{layout.rename_resource(constant)}-{layout.create_database_identifier(configuration)}'
 
     @staticmethod
-    def create_database_identifier(version, product, step, variability):
-        return f"{version}-{product}-{step}-{variability}".lower()
+    def create_database_identifier(configuration):
+        return str(configuration).lower()
     
     @staticmethod
-    def create_postgres_container_name(version, product, step, variability):
-        return layout.create_container_name('postgres', version, product, step, variability)
+    def create_postgres_container_name(configuration):
+        return layout.create_container_name('postgres', configuration)
     
     @staticmethod
-    def create_blazegraph_container_name(version, product, step, variability):
-        return layout.create_container_name('vcity-blazegraph', version, product, step, variability)
+    def create_blazegraph_container_name(configuration):
+        return layout.create_container_name('vcity-blazegraph', configuration)
+    
+    @staticmethod
+    def create_bsbm_container_name(configuration):
+        return layout.create_container_name('bsbm', configuration)
