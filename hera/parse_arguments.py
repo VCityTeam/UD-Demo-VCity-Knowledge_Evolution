@@ -10,12 +10,12 @@ def parse_arguments(logger=logging.getLogger(__name__)):
 
     # Add the locally defined parser extensions
     parser.add(
-        "--k8s_volume_claim_name",
-        help="Name of the k8s volume claim to be used by numerical experiment.",
+        "--k8s_dataset_volume_claim_name",
+        help="Name of the k8s volume claim to be used by numerical experiment to store the dataset.",
         type=str,
     )
     parser.add(
-        "--k8s_configmap_name",
+        "--k8s_proxy_configmap_name",
         help="Name of the k8s config map to be used by numerical experiment to define the proxy.",
         type=str,
     )

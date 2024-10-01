@@ -107,36 +107,120 @@ def does_the_mounted_appear_in_list(
     print(f"Persisted volume directory file access check: {filenames}")
     print(f"The persisted volume directory {mount_path} was properly mounted.")
 
-def create_dbs_containers(configurations: list, constants) -> None:
+def create_postgres_container_service(configuration: configuration, constants) -> None:
+    postgres_container_name = layout.create_postgres_container_name(configuration)
+    postgres_service_name = layout.create_postgres_service_name(configuration)
+    Container(
+        name=postgres_container_name,
+        image=constants.postgres,
+        image_pull_policy=models.ImagePullPolicy.always,
+        daemon=True,
+        env=[
+            Env(
+                name="POSTGRES_DB",
+                value=layout.create_database_identifier(configuration),
+            ),
+            Env(name="POSTGRES_PASSWORD", value="password"), # FIXME: Use a secret
+            Env(name="POSTGRES_USER", value="user"), # FIXME: Use a secret
+            Env(name="PGDATA", value=environment.database_data(configuration)),
+        ],
+        env_from=[
+            # Assumes the corresponding config map is defined at k8s level
+            ConfigMapEnvFrom(
+                name=environment.cluster.proxy_configmap,
+                optional=False,
+            )
+        ],
+    )
+
+    manifest = ("apiVersion: v1\n"
+                "kind: Service\n"
+                "metadata:\n"
+                f"   name: {postgres_service_name}\n"
+                "spec:\n"
+                "   selector:\n"
+                f"       app: {postgres_container_name}\n"
+                "   type: ClusterIP\n"
+                "   ports:\n"
+                "   - port: 5432\n"
+                "     targetPort: 5432\n")
+
+    Resource(
+        name=postgres_service_name,
+        action="create",
+        manifest=manifest,
+    )
+
+def create_blazegraph_container_service(configuration: configuration, constants) -> None:
+    blazegraph_container_name = layout.create_blazegraph_container_name(configuration)
+    blazegraph_service_name = layout.create_blazegraph_service_name(configuration)
+
+    Container(
+        name=blazegraph_container_name,
+        image=constants.blazegraph,
+        image_pull_policy=models.ImagePullPolicy.always,
+        daemon=True,
+        env=[
+            Env(
+                name="BLAZEGRAPH_QUADS",
+                value="true",
+            ),
+            Env(name="BLAZEGRAPH_TIMEOUT", value="180000"),
+            Env(name="BLAZEGRAPH_MEMORY", value="32G"),
+        ]
+    )
+
+    manifest = ("apiVersion: v1\n"
+                "kind: Service\n"
+                "metadata:\n"
+                f"   name: {blazegraph_service_name}\n"
+                "spec:\n"
+                "   selector:\n"
+                f"       app: {blazegraph_container_name}\n"
+                "   type: ClusterIP\n"
+                "   ports:\n"
+                "   - port: 9999\n"
+                "     targetPort: 8080\n")
+    Resource(
+        name=blazegraph_service_name,
+        action="create",
+        manifest=manifest,
+    )
+
+def create_dbs_containers_services(configurations: list, constants) -> None:
     for configuration in configurations:
-        postgres_container_name = layout.create_postgres_container_name(configuration)
-        blazegraph_container_name = layout.create_blazegraph_container_name(configuration)
+        create_postgres_container_service(configuration, constants)
+        create_blazegraph_container_service(configuration, constants)
+
+def create_servers_containers(configurations: list, constants) -> None:
+    for configuration in configurations:
+        quader_container_name = layout.create_quader_container_name(configuration)
+        quaque_container_name = layout.create_quaque_container_name(configuration)
 
         Container(
-            name=postgres_container_name,
-            image=constants.postgres,
+            name=quader_container_name,
+            image=constants.quader,
             image_pull_policy=models.ImagePullPolicy.always,
             daemon=True,
             env=[
                 Env(
-                    name="POSTGRES_DB",
-                    value=layout.create_database_identifier(configuration),
+                    name="SPRING_DATASOURCE_URL",
+                    value=layout.create_relational_database_url(configuration),
                 ),
-                Env(name="POSTGRES_PASSWORD", value="password"), # FIXME: Use a secret
-                Env(name="POSTGRES_USER", value="user"), # FIXME: Use a secret
-                Env(name="PGDATA", value=environment.database_data(configuration)),
+                Env(name="SPRING_DATASOURCE_PASSWORD", value="password"), # FIXME: Use a secret
+                Env(name="SPRING_DATASOURCE_USERNAME", value="user"), # FIXME: Use a secret
             ],
             env_from=[
                 # Assumes the corresponding config map is defined at k8s level
                 ConfigMapEnvFrom(
-                    name=environment.cluster.configmap,
+                    name=environment.cluster.proxy_configmap,
                     optional=False,
                 )
             ],
         )
         Container(
-            name=blazegraph_container_name,
-            image=constants.blazegraph,
+            name=quaque_container_name,
+            image=constants.quaque,
             image_pull_policy=models.ImagePullPolicy.always,
             daemon=True,
             env=[
@@ -236,6 +320,7 @@ if __name__ == "__main__":
         Task,
         DAG,
         Container,
+        Resource,
         ConfigMapEnvFrom,
         Workflow,
         Env,
@@ -259,8 +344,11 @@ if __name__ == "__main__":
     datasets_configurations = generate_datasets_configurations(parameters)
 
     with Workflow(generate_name="converg-experiment-", entrypoint="converg-step") as w:
-        # function building all the database containers
-        create_dbs_containers(dbs_configurations, constants)
+        # function building all the database containers/services
+        create_dbs_containers_services(dbs_configurations, constants)
+        # function building all the server containers/services
+        create_servers_containers(dbs_configurations, constants)
+        # function building all the dataset containers
         create_datasets_containers(datasets_configurations, constants)
 
         with DAG(name="converg-step"):
@@ -271,9 +359,7 @@ if __name__ == "__main__":
                     "version": ds_configuration.version,
                     "product": ds_configuration.product,
                     "step": ds_configuration.step,
-                    "variability": ds_configuration.variability,
-                    "postgres": constants.postgres,
-                    "blazegraph": constants.blazegraph
+                    "variability": ds_configuration.variability
                 }
                 print_inst = print_instance_args(name=f'print-ds-instance-args-{str(ds_configuration)}', arguments={"arguments": instance_args})
 
@@ -291,18 +377,33 @@ if __name__ == "__main__":
                     "step": db_configuration.step,
                     "variability": db_configuration.variability,
                     "postgres": constants.postgres,
-                    "blazegraph": constants.blazegraph
+                    "blazegraph": constants.blazegraph,
+                    "quaque": constants.quaque,
+                    "quader": constants.quader,
                 }
                 print_inst = print_instance_args(name=f'print-db-instance-args-{str(db_configuration)}', arguments={"arguments": instance_args})
                 
-                # init all the databases (postgresql and blazegraph)
+                # init all the databases and services (postgresql and blazegraph)
                 postgres_container_name = layout.create_postgres_container_name(db_configuration)
+                postgres_service_name = layout.create_postgres_service_name(db_configuration)
+
                 blazegraph_container_name = layout.create_blazegraph_container_name(db_configuration)
+                blazegraph_service_name = layout.create_blazegraph_service_name(db_configuration)
 
-                task_pg = Task(name=f'{postgres_container_name}-task', template=postgres_container_name)
-                task_bg = Task(name=f'{blazegraph_container_name}-task', template=blazegraph_container_name)
+                # init all the servers (quader and quaque)
+                quader_container_name = layout.create_quader_container_name(db_configuration)
+                quaque_container_name = layout.create_quaque_container_name(db_configuration)
 
-                print_env >> print_inst >> [task_pg, task_bg]
-            # c = consume(with_param=g.result)
+                # create the tasks for the databases/services
+                task_pg_c = Task(name=f'{postgres_container_name}-task', template=postgres_container_name)
+                task_pg_s = Task(name=f'{postgres_service_name}-task', template=postgres_service_name)
+                task_bg_c = Task(name=f'{blazegraph_container_name}-task', template=blazegraph_container_name)
+                task_bg_s = Task(name=f'{blazegraph_service_name}-task', template=blazegraph_service_name)
+
+                # create the tasks for the servers
+                # task_quader = Task(name=f'{quader_container_name}-task', template=quader_container_name)
+                # task_quaque = Task(name=f'{quaque_container_name}-task', template=quaque_container_name)
+
+                print_env >> print_inst >> [task_pg_s >> task_pg_c, task_bg_s >> task_bg_c]
         
         w.create()

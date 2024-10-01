@@ -93,7 +93,7 @@ if __name__ == "__main__":
                 arguments=[
                     Parameter(
                         name="config_map_name",
-                        value=environment.cluster.configmap,
+                        value=environment.cluster.proxy_configmap,
                     ),
                     Parameter(
                         name="claim_name",
