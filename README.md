@@ -79,6 +79,10 @@ kubectl port-forward services/postgres 5432:5432
 ### Hera workflow
     
 ```shell
+# set the environment variables
+export POSTGRES_USER="<username>" 
+export POSTGRES_PASSWORD="<password>"
+
 # print the help
 python experiment.py --help
 

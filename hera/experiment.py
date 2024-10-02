@@ -1,39 +1,19 @@
+import sys
+import experiment_layout
+from parse_arguments import parse_arguments
+from environment import environment
+from experiment_constants import constants
+from experiment_utils import print_environment, print_instance_args
+from databases import databases
+from servers import servers
+from datasets import datasets
 from hera.workflows import (
-    script,
+    Task,
+    DAG,
+    Workflow,
 )
 
-@script()
-def print_environment(parameters: object):
-    import json
-
-    print("Printing workflow parameters:")
-    print("parameters: ", json.dumps(parameters, sort_keys=True))
-
-@script()
-def print_instance_args(arguments: object):
-    import json
-
-    print("Printing instance arguments:")
-    print("arguments: ", json.dumps(arguments, sort_keys=True))
-
 if __name__ == "__main__":
-    # A workflow that tests whether the defined environment is correct as
-    # seen and used from within the Argo server engine (at Workflow runtime)
-    import sys
-    import experiment_layout
-    from parse_arguments import parse_arguments
-    from environment import environment
-    from experiment_constants import constants
-    from databases import databases
-    from servers import servers
-    from datasets import datasets
-    
-    from hera.workflows import (
-        Task,
-        DAG,
-        Workflow,
-    )
-
     args = parse_arguments()
 
     environment = environment(args)

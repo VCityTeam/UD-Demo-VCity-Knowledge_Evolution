@@ -30,8 +30,8 @@ class servers:
                         name="SPRING_DATASOURCE_URL",
                         value=self.layout.create_relational_database_url(configuration),
                     ),
-                    Env(name="SPRING_DATASOURCE_PASSWORD", value="password"), # FIXME: Use a secret
-                    Env(name="SPRING_DATASOURCE_USERNAME", value="user"), # FIXME: Use a secret
+                    Env(name="SPRING_DATASOURCE_USERNAME", value=constants.postgres_username),
+                    Env(name="SPRING_DATASOURCE_PASSWORD", value=constants.postgres_password),
                 ],
                 env_from=[
                     # Assumes the corresponding config map is defined at k8s level

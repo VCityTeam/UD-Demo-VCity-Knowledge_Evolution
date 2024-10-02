@@ -49,8 +49,8 @@ class databases:
                     name="POSTGRES_DB",
                     value=self.layout.create_database_identifier(configuration),
                 ),
-                Env(name="POSTGRES_PASSWORD", value="password"), # FIXME: Use a secret
-                Env(name="POSTGRES_USER", value="user"), # FIXME: Use a secret
+                Env(name="POSTGRES_USER", value=constants.postgres_username),
+                Env(name="POSTGRES_PASSWORD", value=constants.postgres_password),
                 Env(name="PGDATA", value=self.environment.database_data(configuration)),
             ],
             env_from=[
