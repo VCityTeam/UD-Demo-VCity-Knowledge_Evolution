@@ -1,0 +1,23 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: ud-evolution
+  name: service-manager-role
+rules:
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["create", "get", "list", "update", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: service-manager-rolebinding
+  namespace: ud-evolution
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: ud-evolution
+roleRef:
+  kind: Role
+  name: service-manager-role
+  apiGroup: rbac.authorization.k8s.io
