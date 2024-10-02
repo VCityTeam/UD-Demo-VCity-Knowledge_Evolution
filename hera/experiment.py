@@ -38,7 +38,7 @@ if __name__ == "__main__":
         # function building all the database containers/services
         experiment_dbs.create_dbs_containers_services(dbs_configurations, constants)
         # function building all the server containers/services
-        experiment_servers.create_servers_containers(dbs_configurations, constants)
+        experiment_servers.create_servers_containers_services(dbs_configurations, constants)
         # function building all the dataset containers
         experiment_datasets.create_datasets_containers(datasets_configurations, constants)
 
@@ -83,17 +83,19 @@ if __name__ == "__main__":
                 quader_container_name = layout.create_quader_container_name(db_configuration)
                 quaque_container_name = layout.create_quaque_container_name(db_configuration)
 
-                # create the tasks for the databases/services
+                # create the tasks for the databases and their services
                 task_pg_c = Task(name=f'{postgres_container_name}-container-task', template=postgres_container_name)
                 task_pg_s = Task(name=f'{postgres_container_name}-service-task', template=postgres_container_name)
                 task_bg_c = Task(name=f'{blazegraph_container_name}-container-task', template=blazegraph_container_name)
                 task_bg_s = Task(name=f'{blazegraph_container_name}-service-task', template=blazegraph_container_name)
 
-                # create the tasks for the servers
-                task_quader = Task(name=f'{quader_container_name}-task', template=quader_container_name)
-                task_quaque = Task(name=f'{quaque_container_name}-task', template=quaque_container_name)
+                # create the tasks for the servers and their services
+                task_quader_c = Task(name=f'{quader_container_name}-container-task', template=quader_container_name)
+                task_quader_s = Task(name=f'{quader_container_name}-service-task', template=quader_container_name)
+                task_quaque_c = Task(name=f'{quaque_container_name}-container-task', template=quaque_container_name)
+                task_quaque_s = Task(name=f'{quaque_container_name}-service-task', template=quaque_container_name)
 
-                flow_relational = task_pg_s >> task_pg_c >> task_quader >> task_quaque
+                flow_relational = task_pg_s >> task_pg_c >> task_quader_s >> task_quader_c >> task_quaque_s >> task_quaque_c
                 flow_triple = task_bg_s >> task_bg_c
 
                 print_env >> print_inst >> [flow_relational, flow_triple]
