@@ -4,7 +4,7 @@ metadata:
   name: converg-dataset-pvc
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 200Gi # the storage size depends on the chosen experiment parameters (e.g., versions, products and variabilities)

@@ -41,6 +41,8 @@ if __name__ == "__main__":
         experiment_servers.create_servers_containers_services(dbs_configurations, constants)
         # function building all the dataset containers
         experiment_datasets.create_datasets_containers(datasets_configurations, constants)
+        # function building all the dataset transformers
+        experiment_datasets.create_datasets_transformers(datasets_configurations, constants)
 
         with DAG(name="converg-step"):
             print_env = print_environment(name="print-environment", arguments={"parameters": parameters})
@@ -56,10 +58,13 @@ if __name__ == "__main__":
 
                 # init all the datasets (bsbm)
                 bsbm_container_name = layout.create_bsbm_container_name(ds_configuration)
+                # transform the datasets
+                transformer_container_name = layout.create_transformer_container_name(ds_configuration)
 
                 task_bsbm = Task(name=f'{bsbm_container_name}-task', template=bsbm_container_name)
+                task_transformer = Task(name=f'{transformer_container_name}-task', template=transformer_container_name)
 
-                print_env >> print_inst >> task_bsbm
+                print_env >> print_inst >> task_bsbm >> task_transformer
             
             for db_configuration in dbs_configurations:
                 instance_args = {

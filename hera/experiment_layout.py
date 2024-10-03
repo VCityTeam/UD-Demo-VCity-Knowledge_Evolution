@@ -39,3 +39,7 @@ class layout:
     @staticmethod
     def create_bsbm_container_name(configuration):
         return layout.create_container_name('bsbm', configuration)
+    
+    @staticmethod
+    def create_transformer_container_name(configuration):
+        return layout.create_container_name('transformer', configuration)
