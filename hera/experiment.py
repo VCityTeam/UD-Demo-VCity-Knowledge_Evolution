@@ -59,12 +59,14 @@ if __name__ == "__main__":
                 # init all the datasets (bsbm)
                 bsbm_container_name = layout.create_bsbm_container_name(ds_configuration)
                 # transform the datasets
-                transformer_container_name = layout.create_transformer_container_name(ds_configuration)
+                relational_transformer_container_name = layout.create_typed_transformer_container_name(ds_configuration, 'relational')
+                theoretical_transformer_container_name = layout.create_typed_transformer_container_name(ds_configuration, 'theoretical')
 
                 task_bsbm = Task(name=f'{bsbm_container_name}-task', template=bsbm_container_name)
-                task_transformer = Task(name=f'{transformer_container_name}-task', template=transformer_container_name)
+                task_relational_transformer = Task(name=f'{relational_transformer_container_name}-task', template=relational_transformer_container_name)
+                task_theoretical_transformer = Task(name=f'{theoretical_transformer_container_name}-task', template=theoretical_transformer_container_name)
 
-                print_env >> print_inst >> task_bsbm >> task_transformer
+                print_env >> print_inst >> task_bsbm >> task_relational_transformer >> task_theoretical_transformer
             
             for db_configuration in dbs_configurations:
                 instance_args = {

@@ -54,24 +54,31 @@ class datasets:
     
     def create_datasets_transformers(self, configurations: list[configuration], constants) -> None:        
         for configuration in configurations:
-            transformer_container_name = self.layout.create_transformer_container_name(configuration)
+            self.create_typed_dataset_transformer(configuration, constants, 'relational')
+            self.create_typed_dataset_transformer(configuration, constants, 'theoretical')
+    
+    def create_typed_dataset_transformer(self, configuration: configuration, constants, type: str) -> None:
+        if (type != "relational" and type != "theoretical"):
+            raise Exception(f"Unknown dataset type: {type}")
 
-            volume_mount = ExistingVolume(
-                name=self.environment.persisted_volume.claim_name,
-                claim_name=self.environment.persisted_volume.claim_name,
-                mount_path=f"/app/data/{self.layout.create_bsbm_container_name(configuration)}"
-            )
+        typed_transformer_container_name = self.layout.create_typed_transformer_container_name(configuration, type)
 
-            Container(
-                name=transformer_container_name,
-                image=constants.quads_transformer,
-                image_pull_policy=models.ImagePullPolicy.always,
-                args=[
-                    f"/app/data/{self.layout.create_bsbm_container_name(configuration)}/relational",
-                    f"/app/data/{self.layout.create_bsbm_container_name(configuration)}",
-                    "*",
-                    "relational",
-                    "BSBM"
-                ],
-                volumes=[volume_mount]
-            )
+        volume_mount = ExistingVolume(
+            name=self.environment.persisted_volume.claim_name,
+            claim_name=self.environment.persisted_volume.claim_name,
+            mount_path=f"/app/data/{self.layout.create_bsbm_container_name(configuration)}"
+        )
+
+        Container(
+            name=typed_transformer_container_name,
+            image=constants.quads_transformer,
+            image_pull_policy=models.ImagePullPolicy.always,
+            args=[
+                f"/app/data/{self.layout.create_bsbm_container_name(configuration)}/{type}",
+                f"/app/data/{self.layout.create_bsbm_container_name(configuration)}",
+                "*",
+                type,
+                "BSBM"
+            ],
+            volumes=[volume_mount]
+        )
