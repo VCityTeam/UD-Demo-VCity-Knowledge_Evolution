@@ -1,25 +1,46 @@
 from hera.workflows import (
     Container,
     models,
-    ExistingVolume
+    ExistingVolume,
+    Resource
 )
 from experiment_layout import layout
 from environment import environment
 from configuration import configuration
+from itertools import product
 
 class datasets:
     def __init__(self, layout: layout, environment: environment):
         self.layout = layout
         self.environment = environment
 
+    def create_datasets_volumes(self, configurations: list[configuration]) -> None:
+        for configuration in configurations:
+            manifest = ("apiVersion: v1\n"
+                "kind: PersistentVolumeClaim\n"
+                "metadata:\n"
+                f"   name: {self.environment.compute_dataset_volume_name(configuration)}\n"
+                "spec:\n"
+                "   accessModes:\n"
+                "       - ReadWriteOnce\n"
+                "   resources:\n"
+                "       requests:\n"
+                f"          storage: {self.environment.compute_dataset_volume_size(configuration)}\n")
+            Resource(
+                name=self.environment.compute_dataset_volume_name(configuration),
+                action="create",
+                set_owner_reference=True,
+                manifest=manifest
+            )
+
     def create_datasets_containers(self, configurations: list[configuration], constants) -> None:        
         for configuration in configurations:
             bsbm_container_name = self.layout.create_bsbm_container_name(configuration)
 
             volume_mount = ExistingVolume(
-                name=self.environment.persisted_volume.claim_name,
-                claim_name=self.environment.persisted_volume.claim_name,
-                mount_path=f"/app/data/{self.layout.create_bsbm_container_name(configuration)}"
+                name=self.environment.compute_dataset_volume_name(configuration),
+                claim_name=self.environment.compute_dataset_volume_name(configuration),
+                mount_path=f"/app/data",
             )
 
             Container(
@@ -31,7 +52,6 @@ class datasets:
             )
 
     def generate_datasets_configurations(self, arguments: object) -> list:
-        from itertools import product
 
         versions = [max(arguments["versions"])]
 
@@ -64,9 +84,9 @@ class datasets:
         typed_transformer_container_name = self.layout.create_typed_transformer_container_name(configuration, type)
 
         volume_mount = ExistingVolume(
-            name=self.environment.persisted_volume.claim_name,
-            claim_name=self.environment.persisted_volume.claim_name,
-            mount_path=f"/app/data/{self.layout.create_bsbm_container_name(configuration)}"
+            name=self.environment.compute_dataset_volume_name(configuration),
+            claim_name=self.environment.compute_dataset_volume_name(configuration),
+            mount_path=f"/app/data",
         )
 
         Container(
@@ -74,8 +94,8 @@ class datasets:
             image=constants.quads_transformer,
             image_pull_policy=models.ImagePullPolicy.always,
             args=[
-                f"/app/data/{self.layout.create_bsbm_container_name(configuration)}/{type}",
-                f"/app/data/{self.layout.create_bsbm_container_name(configuration)}",
+                f"/app/data/{type}",
+                f"/app/data",
                 "*",
                 type,
                 "BSBM"

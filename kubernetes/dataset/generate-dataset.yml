@@ -8,7 +8,7 @@ spec:
       containers:
       - name: bsbm-generator
         image: vcity/bsbm
-        args: ["generate-n", "500", "10", "10", "5"] # 500 versions, 10 products, step of 10, variability of 5
+        args: ["generate-n", "50", "10", "10", "5"] # 50 versions, 10 products, step of 10, variability of 5
         volumeMounts:
         - name: converg-dataset-volume
           mountPath: /app/data

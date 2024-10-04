@@ -39,6 +39,8 @@ if __name__ == "__main__":
         experiment_dbs.create_dbs_containers_services(dbs_configurations, constants)
         # function building all the server containers/services
         experiment_servers.create_servers_containers_services(dbs_configurations, constants)
+        # function building all the dataset volumes
+        experiment_datasets.create_datasets_volumes(datasets_configurations)
         # function building all the dataset containers
         experiment_datasets.create_datasets_containers(datasets_configurations, constants)
         # function building all the dataset transformers
@@ -55,18 +57,21 @@ if __name__ == "__main__":
                     "variability": ds_configuration.variability
                 }
                 print_inst = print_instance_args(name=f'print-ds-instance-args-{str(ds_configuration)}', arguments={"arguments": instance_args})
-
+                
+                # init all the datasets volumes
+                volume_mount = environment.compute_dataset_volume_name(ds_configuration)
                 # init all the datasets (bsbm)
                 bsbm_container_name = layout.create_bsbm_container_name(ds_configuration)
                 # transform the datasets
                 relational_transformer_container_name = layout.create_typed_transformer_container_name(ds_configuration, 'relational')
                 theoretical_transformer_container_name = layout.create_typed_transformer_container_name(ds_configuration, 'theoretical')
 
+                task_volume = Task(name=f'{volume_mount}-volume-task', template=volume_mount)
                 task_bsbm = Task(name=f'{bsbm_container_name}-task', template=bsbm_container_name)
                 task_relational_transformer = Task(name=f'{relational_transformer_container_name}-task', template=relational_transformer_container_name)
                 task_theoretical_transformer = Task(name=f'{theoretical_transformer_container_name}-task', template=theoretical_transformer_container_name)
 
-                print_env >> print_inst >> task_bsbm >> task_relational_transformer >> task_theoretical_transformer
+                print_env >> print_inst >> task_volume >> task_bsbm >> task_relational_transformer >> task_theoretical_transformer
             
             for db_configuration in dbs_configurations:
                 instance_args = {

@@ -5,7 +5,7 @@ metadata:
   name: service-manager-role
 rules:
 - apiGroups: [""]
-  resources: ["services"]
+  resources: ["services", "persistentvolumeclaims"]
   verbs: ["create", "get", "list", "update", "delete"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1

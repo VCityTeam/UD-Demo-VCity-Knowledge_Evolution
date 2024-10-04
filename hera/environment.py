@@ -1,6 +1,6 @@
 from hera_utils import k8s_cluster
 from hera_utils import num_exp_environment, Struct
-
+from configuration import configuration
 
 class environment(num_exp_environment):
     def database_data(self, configuration):
@@ -31,3 +31,10 @@ class environment(num_exp_environment):
         # should be dealt by the (Experiment) Conductor (refer to
         # https://gitlab.liris.cnrs.fr/expedata/expe-data-project/-/blob/master/lexicon.md#conductor )
         self.persisted_volume.mount_path = "/data"
+
+    def compute_dataset_volume_name(self, configuration: configuration):
+        return f"volume-{configuration.product}-{configuration.version}-{configuration.step}-{configuration.variability}"
+
+    def compute_dataset_volume_size(self, configuration: configuration):
+        factor = (configuration.product + configuration.step * configuration.version) * 5 # 5 is a magic number
+        return f'{factor}Mi'
