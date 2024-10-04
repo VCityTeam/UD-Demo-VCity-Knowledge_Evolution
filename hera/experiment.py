@@ -66,7 +66,7 @@ if __name__ == "__main__":
                 relational_transformer_container_name = layout.create_typed_transformer_container_name(ds_configuration, 'relational')
                 theoretical_transformer_container_name = layout.create_typed_transformer_container_name(ds_configuration, 'theoretical')
 
-                task_volume = Task(name=f'{volume_mount}-volume-task', template=volume_mount)
+                task_volume = Task(name=f'{volume_mount}-task', template=volume_mount)
                 task_bsbm = Task(name=f'{bsbm_container_name}-task', template=bsbm_container_name)
                 task_relational_transformer = Task(name=f'{relational_transformer_container_name}-task', template=relational_transformer_container_name)
                 task_theoretical_transformer = Task(name=f'{theoretical_transformer_container_name}-task', template=theoretical_transformer_container_name)
@@ -88,24 +88,27 @@ if __name__ == "__main__":
                 
                 # init all the databases and services (postgresql and blazegraph)
                 postgres_container_name = layout.create_postgres_container_name(db_configuration)
-
                 blazegraph_container_name = layout.create_blazegraph_container_name(db_configuration)
+                postgres_service_name = layout.create_postgres_service_name(db_configuration)
+                blazegraph_service_name = layout.create_blazegraph_service_name(db_configuration)
 
                 # init all the servers (quader and quaque)
                 quader_container_name = layout.create_quader_container_name(db_configuration)
                 quaque_container_name = layout.create_quaque_container_name(db_configuration)
+                quader_service_name = layout.create_quader_service_name(db_configuration)
+                quaque_service_name = layout.create_quaque_service_name(db_configuration)
 
                 # create the tasks for the databases and their services
-                task_pg_c = Task(name=f'{postgres_container_name}-container-task', template=postgres_container_name)
-                task_pg_s = Task(name=f'{postgres_container_name}-service-task', template=postgres_container_name)
-                task_bg_c = Task(name=f'{blazegraph_container_name}-container-task', template=blazegraph_container_name)
-                task_bg_s = Task(name=f'{blazegraph_container_name}-service-task', template=blazegraph_container_name)
+                task_bg_s = Task(name=f'{blazegraph_service_name}-task', template=blazegraph_service_name)
+                task_pg_s = Task(name=f'{postgres_service_name}-task', template=postgres_service_name)
+                task_pg_c = Task(name=f'{postgres_container_name}-task', template=postgres_container_name)
+                task_bg_c = Task(name=f'{blazegraph_container_name}-task', template=blazegraph_container_name)
 
                 # create the tasks for the servers and their services
-                task_quader_c = Task(name=f'{quader_container_name}-container-task', template=quader_container_name)
-                task_quader_s = Task(name=f'{quader_container_name}-service-task', template=quader_container_name)
-                task_quaque_c = Task(name=f'{quaque_container_name}-container-task', template=quaque_container_name)
-                task_quaque_s = Task(name=f'{quaque_container_name}-service-task', template=quaque_container_name)
+                task_quader_s = Task(name=f'{quader_service_name}-task', template=quader_service_name)
+                task_quaque_s = Task(name=f'{quaque_service_name}-task', template=quaque_service_name)
+                task_quader_c = Task(name=f'{quader_container_name}-task', template=quader_container_name)
+                task_quaque_c = Task(name=f'{quaque_container_name}-task', template=quaque_container_name)
 
                 flow_relational = task_pg_s >> task_pg_c >> task_quader_s >> task_quader_c >> task_quaque_s >> task_quaque_c
                 flow_triple = task_bg_s >> task_bg_c

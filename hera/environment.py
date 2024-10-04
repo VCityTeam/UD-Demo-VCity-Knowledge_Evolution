@@ -3,8 +3,6 @@ from hera_utils import num_exp_environment, Struct
 from configuration import configuration
 
 class environment(num_exp_environment):
-    def database_data(self, configuration):
-        return f"{self.persisted_volume.mount_path}/{str(configuration)}"
 
     def __init__(self, args, verbose=False):
 
@@ -38,3 +36,6 @@ class environment(num_exp_environment):
     def compute_dataset_volume_size(self, configuration: configuration):
         factor = (configuration.product + configuration.step * configuration.version) * 5 # 5 is a magic number
         return f'{factor}Mi'
+
+    def database_data(self, configuration):
+        return f"{self.persisted_volume.mount_path}/{str(configuration)}"

@@ -39,6 +39,7 @@ class databases:
 
     def create_postgres_container_service(self, configuration: configuration, constants) -> None:
         postgres_container_name = self.layout.create_postgres_container_name(configuration)
+        postgres_service_name = self.layout.create_postgres_service_name(configuration)
         Container(
             name=postgres_container_name,
             image=constants.postgres,
@@ -75,13 +76,14 @@ class databases:
                     "     targetPort: 5432\n")
 
         Resource(
-            name=f'{postgres_container_name}-service',
+            name=postgres_service_name,
             action="create",
             manifest=manifest,
         )
 
     def create_blazegraph_container_service(self, configuration: configuration, constants) -> None:
         blazegraph_container_name = self.layout.create_blazegraph_container_name(configuration)
+        blazegraph_service_name = self.layout.create_blazegraph_service_name(configuration)
 
         Container(
             name=blazegraph_container_name,
@@ -110,7 +112,7 @@ class databases:
                     "   - port: 9999\n"
                     "     targetPort: 8080\n")
         Resource(
-            name=f'{blazegraph_container_name}-service',
+            name=blazegraph_service_name,
             action="create",
             manifest=manifest,
         )

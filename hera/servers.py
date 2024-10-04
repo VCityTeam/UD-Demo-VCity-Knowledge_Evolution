@@ -22,6 +22,7 @@ class servers:
 
     def create_quader_container_service(self, configuration: configuration, constants) -> None:
         quader_container_name = self.layout.create_quader_container_name(configuration)
+        quader_service_name = self.layout.create_quader_service_name(configuration)
 
         Container(
             name=quader_container_name,
@@ -57,13 +58,14 @@ class servers:
                     "   - port: 8080\n"
                     "     targetPort: 8080\n")
         Resource(
-            name=f'{quader_container_name}-service',
+            name=quader_service_name,
             action="create",
             manifest=manifest,
         )
 
     def create_quaque_container_service(self, configuration: configuration, constants) -> None:
         quaque_container_name = self.layout.create_quaque_container_name(configuration)
+        quaque_service_name = self.layout.create_quaque_service_name(configuration)
 
         Container(
             name=quaque_container_name,
@@ -89,7 +91,7 @@ class servers:
                     "   - port: 8081\n"
                     "     targetPort: 8081\n")
         Resource(
-            name=f'{quaque_container_name}-service',
+            name=quaque_service_name,
             action="create",
             manifest=manifest,
         )
