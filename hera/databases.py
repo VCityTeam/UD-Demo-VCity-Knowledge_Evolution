@@ -45,6 +45,7 @@ class databases:
             image=constants.postgres,
             image_pull_policy=models.ImagePullPolicy.always,
             daemon=True,
+            labels={"app": postgres_container_name}
             env=[
                 Env(
                     name="POSTGRES_DB",
@@ -66,7 +67,7 @@ class databases:
         manifest = ("apiVersion: v1\n"
                     "kind: Service\n"
                     "metadata:\n"
-                    f"   name: {postgres_container_name}\n"
+                    f"   name: {postgres_service_name}\n"
                     "spec:\n"
                     "   selector:\n"
                     f"       app: {postgres_container_name}\n"
@@ -89,6 +90,7 @@ class databases:
             name=blazegraph_container_name,
             image=constants.blazegraph,
             image_pull_policy=models.ImagePullPolicy.always,
+            labels={"app": blazegraph_container_name}
             daemon=True,
             env=[
                 Env(
@@ -103,7 +105,7 @@ class databases:
         manifest = ("apiVersion: v1\n"
                     "kind: Service\n"
                     "metadata:\n"
-                    f"   name: {blazegraph_container_name}\n"
+                    f"   name: {blazegraph_service_name}\n"
                     "spec:\n"
                     "   selector:\n"
                     f"       app: {blazegraph_container_name}\n"

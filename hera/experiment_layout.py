@@ -17,8 +17,7 @@ class layout:
 
     @staticmethod
     def create_relational_database_url(configuration):
-        host = layout.create_postgres_container_name(configuration)
-        # host = layout.create_postgres_service_name(configuration)
+        host = layout.create_postgres_service_name(configuration)
         return f'jdbc:postgresql://{host}:5432/{layout.create_database_identifier(configuration)}'
     
     @staticmethod

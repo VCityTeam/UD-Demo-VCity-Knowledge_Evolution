@@ -29,6 +29,7 @@ class servers:
             image=constants.quader,
             image_pull_policy=models.ImagePullPolicy.always,
             daemon=True,
+            labels={"app": quader_container_name},
             env=[
                 Env(
                     name="SPRING_DATASOURCE_URL",
@@ -49,7 +50,7 @@ class servers:
         manifest = ("apiVersion: v1\n"
                     "kind: Service\n"
                     "metadata:\n"
-                    f"   name: {quader_container_name}\n"
+                    f"   name: {quader_service_name}\n"
                     "spec:\n"
                     "   selector:\n"
                     f"       app: {quader_container_name}\n"
@@ -71,6 +72,7 @@ class servers:
             name=quaque_container_name,
             image=constants.quaque,
             image_pull_policy=models.ImagePullPolicy.always,
+            labels={"app": quaque_container_name},
             daemon=True,
             env=[
                 Env(name="DATASOURCE_URL", value=self.layout.create_relational_database_url(configuration)),
@@ -82,7 +84,7 @@ class servers:
         manifest = ("apiVersion: v1\n"
                     "kind: Service\n"
                     "metadata:\n"
-                    f"   name: {quaque_container_name}\n"
+                    f"   name: {quaque_service_name}\n"
                     "spec:\n"
                     "   selector:\n"
                     f"       app: {quaque_container_name}\n"
