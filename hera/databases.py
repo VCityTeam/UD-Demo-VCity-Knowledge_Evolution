@@ -9,6 +9,7 @@ from hera.workflows import (
 from experiment_layout import layout
 from environment import environment
 from configuration import configuration
+from itertools import product
 
 class databases:
     def __init__(self, layout: layout, environment: environment):
@@ -16,9 +17,20 @@ class databases:
         self.environment = environment
 
     def generate_databases_configurations(self, parameters: object) -> list:
-        from itertools import product
+        """
+        Generates a list of database configurations based on the provided parameters.
 
-        # generate the instances: it has to be all combinations of the arguments
+        Args:
+            parameters (object): An object containing the following keys:
+                - "versions" (list): A list of version identifiers.
+                - "products" (list): A list of product identifiers.
+                - "steps" (list): A list of step identifiers.
+                - "variabilities" (list): A list of variability identifiers.
+
+        Returns:
+            list: A list of configuration objects, each representing a unique combination
+                  of version, product, step, and variability.
+        """
         configurations = list(product(
             parameters["versions"],
             parameters["products"],
@@ -38,6 +50,17 @@ class databases:
 
 
     def create_postgres_container_service(self, configuration: configuration, constants) -> None:
+        """
+        Creates a PostgreSQL container service within a Kubernetes cluster.
+        This method sets up a PostgreSQL container with the specified configuration and constants.
+        It defines the container's environment variables, image, and other properties, and then
+        creates a corresponding Kubernetes service manifest to expose the container.
+        Args:
+            configuration (configuration): The configuration object containing settings for the PostgreSQL container.
+            constants: An object containing constant values such as image name, username, and password.
+        Returns:
+            None
+        """
         postgres_container_name = self.layout.create_postgres_container_name(configuration)
         postgres_service_name = self.layout.create_postgres_service_name(configuration)
         Container(
@@ -45,7 +68,7 @@ class databases:
             image=constants.postgres,
             image_pull_policy=models.ImagePullPolicy.always,
             daemon=True,
-            labels={"app": postgres_container_name}
+            labels={"app": postgres_container_name},
             env=[
                 Env(
                     name="POSTGRES_DB",
@@ -54,14 +77,7 @@ class databases:
                 Env(name="POSTGRES_USER", value=constants.postgres_username),
                 Env(name="POSTGRES_PASSWORD", value=constants.postgres_password),
                 Env(name="PGDATA", value=self.environment.database_data(configuration)),
-            ],
-            env_from=[
-                # Assumes the corresponding config map is defined at k8s level
-                ConfigMapEnvFrom(
-                    name=self.environment.cluster.proxy_configmap,
-                    optional=False,
-                )
-            ],
+            ]
         )
 
         manifest = ("apiVersion: v1\n"
@@ -83,6 +99,20 @@ class databases:
         )
 
     def create_blazegraph_container_service(self, configuration: configuration, constants) -> None:
+        """
+        Creates a Blazegraph container service.
+
+        This method sets up a Blazegraph container with the specified configuration and constants.
+        It configures the container with environment variables and creates a Kubernetes service
+        manifest to expose the container.
+
+        Args:
+            configuration (configuration): The configuration object containing settings for the container.
+            constants: An object containing constant values, including the Blazegraph image.
+
+        Returns:
+            None
+        """
         blazegraph_container_name = self.layout.create_blazegraph_container_name(configuration)
         blazegraph_service_name = self.layout.create_blazegraph_service_name(configuration)
 
@@ -90,7 +120,7 @@ class databases:
             name=blazegraph_container_name,
             image=constants.blazegraph,
             image_pull_policy=models.ImagePullPolicy.always,
-            labels={"app": blazegraph_container_name}
+            labels={"app": blazegraph_container_name},
             daemon=True,
             env=[
                 Env(
@@ -120,6 +150,19 @@ class databases:
         )
 
     def create_dbs_containers_services(self, configurations: list, constants) -> None:
+        """
+        Creates database containers and services for the given configurations.
+
+        This method iterates over a list of configurations and creates PostgreSQL
+        and Blazegraph container services for each configuration.
+
+        Args:
+            configurations (list): A list of configuration objects.
+            constants: A set of constants used for creating the container services.
+
+        Returns:
+            None
+        """
         for configuration in configurations:
             self.create_postgres_container_service(configuration, constants)
             self.create_blazegraph_container_service(configuration, constants)

@@ -59,3 +59,7 @@ class layout:
     @staticmethod
     def create_typed_transformer_container_name(configuration, type):
         return f"{layout.create_name(f'{type}-transformer', configuration)}-container"
+
+    @staticmethod
+    def create_typed_importer_container_name(configuration, type):
+        return f"{layout.create_name(f'{type}-importer', configuration)}-container"

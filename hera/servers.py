@@ -16,11 +16,29 @@ class servers:
         self.environment = environment
 
     def create_servers_containers_services(self, configurations: list[configuration], constants) -> None:
+        """
+        Creates server containers and services based on the provided configurations.
+        Args:
+            configurations (list[configuration]): A list of configuration objects to create the containers and services.
+            constants: A set of constants used during the creation process.
+        Returns:
+            None
+        """
         for configuration in configurations:
             self.create_quader_container_service(configuration, constants)
             self.create_quaque_container_service(configuration, constants)
 
     def create_quader_container_service(self, configuration: configuration, constants) -> None:
+        """
+        Creates a Quader container and its corresponding Kubernetes service manifest.
+
+        Args:
+            configuration (configuration): The configuration object containing necessary parameters.
+            constants: An object containing constant values such as image names and credentials.
+
+        Returns:
+            None
+        """
         quader_container_name = self.layout.create_quader_container_name(configuration)
         quader_service_name = self.layout.create_quader_service_name(configuration)
 
@@ -37,14 +55,7 @@ class servers:
                 ),
                 Env(name="SPRING_DATASOURCE_USERNAME", value=constants.postgres_username),
                 Env(name="SPRING_DATASOURCE_PASSWORD", value=constants.postgres_password),
-            ],
-            env_from=[
-                # Assumes the corresponding config map is defined at k8s level
-                ConfigMapEnvFrom(
-                    name=self.environment.cluster.proxy_configmap,
-                    optional=False,
-                )
-            ],
+            ]
         )
 
         manifest = ("apiVersion: v1\n"
@@ -65,6 +76,16 @@ class servers:
         )
 
     def create_quaque_container_service(self, configuration: configuration, constants) -> None:
+        """
+        Creates a Quaque container service with the specified configuration and constants.
+
+        Args:
+            configuration (configuration): The configuration object containing necessary settings.
+            constants: An object containing constant values such as image names and database credentials.
+
+        Returns:
+            None
+        """
         quaque_container_name = self.layout.create_quaque_container_name(configuration)
         quaque_service_name = self.layout.create_quaque_service_name(configuration)
 

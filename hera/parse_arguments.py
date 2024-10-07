@@ -14,9 +14,10 @@ def parse_arguments(logger=logging.getLogger(__name__)):
         help="Name of the k8s volume claim to be used by numerical experiment to store the dataset.",
         type=str,
     )
+
     parser.add(
-        "--k8s_proxy_configmap_name",
-        help="Name of the k8s config map to be used by numerical experiment to define the proxy.",
+        "--k8s_importers_configmap_name",
+        help="Name of the k8s config map to be used by numerical experiment to store the import scripts.",
         type=str,
     )
 

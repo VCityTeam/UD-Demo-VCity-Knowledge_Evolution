@@ -14,8 +14,8 @@ class environment(num_exp_environment):
         ### Some tasks require to retrieve cluster specific environment
         # (e.g. HTTP_PROXY) values at runtime. This retrieval is done through an
         # ad-hoc k8s configuration map. Assert this map exists.
-        k8s.assert_configmap(args.k8s_proxy_configmap_name)
-        self.cluster.proxy_configmap = args.k8s_proxy_configmap_name
+        k8s.assert_configmap(args.k8s_importers_configmap_name)
+        self.cluster.importers_configmap = args.k8s_importers_configmap_name
 
         ### A persistent volume (defined at the k8s level) can be used by
         # tasks of a workflow in order to flow output results from an upstream
@@ -32,6 +32,12 @@ class environment(num_exp_environment):
 
     def compute_dataset_volume_name(self, configuration: configuration):
         return f"volume-{configuration.product}-{configuration.version}-{configuration.step}-{configuration.variability}"
+
+    def compute_dataset_volume_name(self, configuration: configuration):
+        return f"volume-{configuration.product}-{configuration.version}-{configuration.step}-{configuration.variability}"
+
+    def compute_configmap_volume_name(self, configuration: configuration, type: str):
+        return f"configmap-{type}-{configuration.product}-{configuration.version}-{configuration.step}-{configuration.variability}"
 
     def compute_dataset_volume_size(self, configuration: configuration):
         factor = (configuration.product + configuration.step * configuration.version) * 5 # 5 is a magic number
