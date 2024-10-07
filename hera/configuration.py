@@ -10,3 +10,6 @@ class configuration:
 
     def __str__(self):
         return f"{self.version}-{self.product}-{self.step}-{self.variability}"
+    
+    def __repr__(self):
+        return f"{self.version}-{self.product}-{self.step}-{self.variability}"

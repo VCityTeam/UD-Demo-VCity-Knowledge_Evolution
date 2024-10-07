@@ -18,8 +18,8 @@ from itertools import product
     inputs=[
         Parameter(name="existing_volume_name", description=""),
         Parameter(name="typed_importer_container_name", description=""),
-        Parameter(name="type", description="The type of the dataset"),
         Parameter(name="number_of_versions", description="The number of versions to import"),
+        Parameter(name="hostname", description="The hostname of the server to import the data into"),
     ],
     volumes=[
         ExistingVolume(
@@ -29,7 +29,7 @@ from itertools import product
         )
     ]
 )
-def create_relational_dataset_importer(existing_volume_name: str, typed_importer_container_name: str, number_of_versions: int) -> None:
+def create_relational_dataset_importer(existing_volume_name: str, typed_importer_container_name: str, number_of_versions: int, hostname: str) -> None:
     import subprocess
     import sys
     from datetime import datetime
@@ -37,11 +37,20 @@ def create_relational_dataset_importer(existing_volume_name: str, typed_importer
     import time
 
     subprocess.check_call([sys.executable, "-m", "pip", "install", "requests"])
-    print("Psutils python package successfully installed.")
+    print("requests python package successfully installed.")
 
     import requests
 
-    for root, dirs, files in os.walk("/app/data/relational"):
+    directory = "/app/data/relational"
+
+    try:
+        # Get the list of files and directories in the specified directory
+        files = os.listdir(directory)
+        
+        # Filter out directories, keeping only files
+        files = [f for f in files if os.path.isfile(os.path.join(directory, f))]
+
+        # Print the files
         for file in files:
             if file.endswith(".ttl.relational.trig"):
                 # Extraire le numéro de version à partir du nom de fichier
@@ -49,23 +58,25 @@ def create_relational_dataset_importer(existing_volume_name: str, typed_importer
 
                 # Vérifier si la version est inférieure ou égale au nombre de versions spécifiées
                 if version <= number_of_versions:
-                    filepath = os.path.join(root, file)
-                    print(f"\n{datetime.now().isoformat()} - [quads-loader] Version {filepath}")
+                    print(f"\n{datetime.now().isoformat()} - [quads-loader] Version {file}")
                     start = int(time.time() * 1000)
+                    filepath = os.path.join(directory, file)
 
                     # Effectuer la requête HTTP pour importer la version
                     try:
                         response = requests.post(
-                            'http://quads-loader:8080/import/version',
+                            f'http://{hostname}:8080/import/version',
                             headers={'Content-Type': 'multipart/form-data'},
                             files={'file': open(filepath, 'rb')},
                         )
                         response.raise_for_status()
                     except requests.exceptions.RequestException as e:
-                        print(f"Failed to import {file}: {e}")
+                        print(f"Failed to import {filepath}: {e}")
 
                     end = int(time.time() * 1000)
                     print(f"\n{datetime.now().isoformat()} - [Measure] (Import STS {file}): {end-start}ms;")
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 
 @script(
@@ -73,8 +84,8 @@ def create_relational_dataset_importer(existing_volume_name: str, typed_importer
     inputs=[
         Parameter(name="existing_volume_name", description=""),
         Parameter(name="typed_importer_container_name", description=""),
-        Parameter(name="type", description="The type of the dataset"),
         Parameter(name="number_of_versions", description="The number of versions to import"),
+        Parameter(name="hostname", description="The hostname of the server to import the data into"),
     ],
     volumes=[
         ExistingVolume(
@@ -84,7 +95,7 @@ def create_relational_dataset_importer(existing_volume_name: str, typed_importer
         )
     ]
 )
-def create_theoretical_dataset_importer(existing_volume_name: str, typed_importer_container_name: str, number_of_versions: int) -> None:
+def create_theoretical_dataset_importer(existing_volume_name: str, typed_importer_container_name: str, number_of_versions: int, hostname: str) -> None:
     import subprocess
     import sys
     from datetime import datetime
@@ -92,11 +103,20 @@ def create_theoretical_dataset_importer(existing_volume_name: str, typed_importe
     import time
 
     subprocess.check_call([sys.executable, "-m", "pip", "install", "requests"])
-    print("Psutils python package successfully installed.")
+    print("requests python package successfully installed.")
 
     import requests
 
-    for root, dirs, files in os.walk("/app/data/theoretical"):
+    directory = "/app/data/theoretical"
+
+    try:
+        # Get the list of files and directories in the specified directory
+        files = os.listdir(directory)
+        
+        # Filter out directories, keeping only files
+        files = [f for f in files if os.path.isfile(os.path.join(directory, f))]
+
+        # Print the files
         for file in files:
             if file.endswith(".ttl.theoretical.trig"):
                 # Extraire le numéro de version à partir du nom de fichier
@@ -104,24 +124,25 @@ def create_theoretical_dataset_importer(existing_volume_name: str, typed_importe
 
                 # Vérifier si la version est inférieure ou égale au nombre de versions spécifiées
                 if version <= number_of_versions:
-                    filepath = os.path.join(root, file)
-                    print(f"\n{datetime.now().isoformat()} - [Triple Store] Version {filepath}")
+                    print(f"\n{datetime.now().isoformat()} - [Triple Store] Version {file}")
                     start = int(time.time() * 1000)
+                    filepath = os.path.join(directory, file)
 
                     # Effectuer la requête HTTP pour importer la version
                     try:
                         response = requests.post(
-                            'http://blazegraph:9999/blazegraph/sparql',
+                            f'http://{hostname}:9999/blazegraph/sparql',
                             headers={'Content-Type': 'application/x-trig'},
                             files={'file': open(filepath, 'rb')},
                         )
                         response.raise_for_status()
                     except requests.exceptions.RequestException as e:
-                        print(f"Failed to import {file}: {e}")
+                        print(f"Failed to import {filepath}: {e}")
 
                     end = int(time.time() * 1000)
                     print(f"\n{datetime.now().isoformat()} - [Measure] (Import BG {file}): {end-start}ms;")
-
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 class datasets:
     def __init__(self, layout: layout, environment: environment):
@@ -189,7 +210,7 @@ class datasets:
                 volumes=[volume_mount]
             )
 
-    def generate_datasets_configurations(self, arguments: object) -> list:
+    def generate_datasets_configurations(self, arguments: object) -> list[configuration]:
         """
         Generate dataset configurations based on the provided arguments.
         This method takes an object containing various arguments and generates a list of dataset configurations.
