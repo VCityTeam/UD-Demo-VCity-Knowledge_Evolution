@@ -16,12 +16,6 @@ def parse_arguments(logger=logging.getLogger(__name__)):
     )
 
     parser.add(
-        "--k8s_importers_configmap_name",
-        help="Name of the k8s config map to be used by numerical experiment to store the import scripts.",
-        type=str,
-    )
-
-    parser.add(
         "--versions",
         help="List of versions to be used in the numerical experiment",
         type=int,

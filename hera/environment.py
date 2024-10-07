@@ -11,12 +11,6 @@ class environment(num_exp_environment):
         k8s = k8s_cluster(args)
         k8s.assert_cluster()
 
-        ### Some tasks require to retrieve cluster specific environment
-        # (e.g. HTTP_PROXY) values at runtime. This retrieval is done through an
-        # ad-hoc k8s configuration map. Assert this map exists.
-        k8s.assert_configmap(args.k8s_importers_configmap_name)
-        self.cluster.importers_configmap = args.k8s_importers_configmap_name
-
         ### A persistent volume (defined at the k8s level) can be used by
         # tasks of a workflow in order to flow output results from an upstream
         # task to a downstream one, and persist once the workflow is finished

@@ -10,17 +10,36 @@ data:
     echo "-------------------------------------------------------------- [BEGIN IMPORT TRIPLE] --------------------------------------------------------------"
     printf "\n%s$(date +%FT%T) - [Triple Store] Dataset import started."
 
+    # Extract version number from the file name (assuming the format dataset-{version}.ttl.theoretical.trig)
+    version=$(echo "$file" | grep -oP '(?<=-)\d+(?=.ttl\.theoretical\.trig)')
+    
     ## BSBM tagged data
-    find . -type f -name "*.trig" -print0 | while IFS= read -r -d '' file; do
-        printf "%s\n$(date +%FT%T) - [Triple Store] $file."
-        start=$(date +%s%3N)
-        curl -X POST --location 'http://blazegraph:9999/blazegraph/sparql' \
-            --header 'Content-Type:application/x-trig' \
-            --data-binary @"$file"
-        end=$(date +%s%3N)
-        printf "\n%s$(date +%FT%T) - [Measure] (Import BG $file):$((end - start))ms;"
+    find . -type f -name "*.trig" -print0 | while IFS= read -r -d '' file
+    do
+        # Extract version number from the file name (assuming the format dataset-{version}.ttl.theoretical.trig)
+        version=$(echo "$file" | grep -oP '(?<=-)\d+(?=.ttl\.theoretical\.trig)')
+
+        # Check if the version is less than or equal to the specified number_of_versions
+        if [ "$version" -le "$number_of_versions" ]; then
+            printf "%s\n$(date +%FT%T) - [Triple Store] $file."
+            start=$(date +%s%3N)
+            curl -X POST --location 'http://blazegraph:9999/blazegraph/sparql' \
+                  --header 'Content-Type:application/x-trig' \
+                  --connect-timeout 60 \
+                  --data-binary @"$file"
+                  end=$(date +%s%3N)
+            printf "\n%s$(date +%FT%T) - [Measure] (Import BG $file):$((end-start))ms;"
+        fi
     done
 
+    start=$(date +%s%3N)
+    curl -X POST --location 'http://blazegraph:9999/blazegraph/sparql' \
+      --header 'Content-Type:application/x-trig' \
+      --connect-timeout 60 \
+      --data-binary @"theoretical_annotations.trig"
+    end=$(date +%s%3N)
+    printf "\n%s$(date +%FT%T) - [Measure] (Import BG theoretical_annotations.trig):$((end-start))ms;"
+    
     printf "\n%s$(date +%FT%T) - [Triple Store] Dataset import completed."
     echo "--------------------------------------------------------------- [END IMPORT TRIPLE] ---------------------------------------------------------------"
   import-dataset-relational.sh: |
@@ -30,25 +49,29 @@ data:
     echo "------------------------------------------------------------ [BEGIN IMPORT RELATIONAL] ------------------------------------------------------------"
     printf "\n%s$(date +%FT%T) - [quads-loader] Dataset import started."
 
+    number_of_versions=$1
+
     ## BSBM tagged data
     ### Import the versions of BSBM
 
     find . -type f -name "*.ttl.relational.trig" -print0 | while IFS= read -r -d '' file
     do
-        printf "\n%s$(date +%FT%T) - [quads-loader] Version $file"
-        start=$(date +%s%3N)
-        curl --location 'http://quads-loader:8080/import/version' \
-          --header 'Content-Type: multipart/form-data' \
-          --form file=@"$file"
-        end=$(date +%s%3N)
-        printf "\n%s$(date +%FT%T) - [Measure] (Import STS $file):$((end-start))ms;"
+      # Extract version number from the file name (assuming the format dataset-{version}.ttl.relational.trig)
+      version=$(echo "$file" | grep -oP '(?<=-)\d+(?=.ttl\.relational\.trig)')
+
+      # Check if the version is less than or equal to the specified number_of_versions
+      if [ "$version" -le "$number_of_versions" ]; then
+          printf "\n%s$(date +%FT%T) - [quads-loader] Version $file"
+          start=$(date +%s%3N)
+          curl --location 'http://quads-loader:8080/import/version' \
+            --header 'Content-Type: multipart/form-data' \
+            --connect-timeout 60 \
+            --form file=@"$file"
+          end=$(date +%s%3N)
+          printf "\n%s$(date +%FT%T) - [Measure] (Import STS $file):$((end-start))ms;"
+      fi
     done
 
     printf "\n%s$(date +%FT%T) - [quads-loader] Dataset import completed."
-
-    ### Condense dataset
-    printf "\n%s$(date +%FT%T) - [quads-loader] Dataset condensation started."
-    curl --location 'http://quads-loader:8080/import/condense'
-    printf "\n%s$(date +%FT%T) - [quads-loader] Dataset condensation completed."
 
     echo "------------------------------------------------------------- [END IMPORT RELATIONAL] -------------------------------------------------------------"

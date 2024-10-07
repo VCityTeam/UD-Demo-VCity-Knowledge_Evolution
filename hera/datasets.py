@@ -2,14 +2,126 @@ from hera.workflows import (
     Container,
     models,
     ExistingVolume,
-    Volume,
-    Resource
+    Resource,
+    script,
+    Parameter
 )
 from hera.workflows.models import VolumeMount
 from experiment_layout import layout
 from environment import environment
 from configuration import configuration
 from itertools import product
+
+
+@script(
+    image="python:3.11",
+    inputs=[
+        Parameter(name="existing_volume_name", description=""),
+        Parameter(name="typed_importer_container_name", description=""),
+        Parameter(name="type", description="The type of the dataset"),
+        Parameter(name="number_of_versions", description="The number of versions to import"),
+    ],
+    volumes=[
+        ExistingVolume(
+            name="{{inputs.parameters.existing_volume_name}}",
+            claim_name="{{inputs.parameters.existing_volume_name}}",
+            mount_path=f"/app/data",
+        )
+    ]
+)
+def create_relational_dataset_importer(existing_volume_name: str, typed_importer_container_name: str, number_of_versions: int) -> None:
+    import subprocess
+    import sys
+    from datetime import datetime
+    import os
+    import time
+
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "requests"])
+    print("Psutils python package successfully installed.")
+
+    import requests
+
+    for root, dirs, files in os.walk("/app/data/relational"):
+        for file in files:
+            if file.endswith(".ttl.relational.trig"):
+                # Extraire le numéro de version à partir du nom de fichier
+                version = int(file.split('-')[-1].split('.ttl')[0])
+
+                # Vérifier si la version est inférieure ou égale au nombre de versions spécifiées
+                if version <= number_of_versions:
+                    filepath = os.path.join(root, file)
+                    print(f"\n{datetime.now().isoformat()} - [quads-loader] Version {filepath}")
+                    start = int(time.time() * 1000)
+
+                    # Effectuer la requête HTTP pour importer la version
+                    try:
+                        response = requests.post(
+                            'http://quads-loader:8080/import/version',
+                            headers={'Content-Type': 'multipart/form-data'},
+                            files={'file': open(filepath, 'rb')},
+                        )
+                        response.raise_for_status()
+                    except requests.exceptions.RequestException as e:
+                        print(f"Failed to import {file}: {e}")
+
+                    end = int(time.time() * 1000)
+                    print(f"\n{datetime.now().isoformat()} - [Measure] (Import STS {file}): {end-start}ms;")
+
+
+@script(
+    image="python:3.11",
+    inputs=[
+        Parameter(name="existing_volume_name", description=""),
+        Parameter(name="typed_importer_container_name", description=""),
+        Parameter(name="type", description="The type of the dataset"),
+        Parameter(name="number_of_versions", description="The number of versions to import"),
+    ],
+    volumes=[
+        ExistingVolume(
+            name="{{inputs.parameters.existing_volume_name}}",
+            claim_name="{{inputs.parameters.existing_volume_name}}",
+            mount_path=f"/app/data",
+        )
+    ]
+)
+def create_theoretical_dataset_importer(existing_volume_name: str, typed_importer_container_name: str, number_of_versions: int) -> None:
+    import subprocess
+    import sys
+    from datetime import datetime
+    import os
+    import time
+
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "requests"])
+    print("Psutils python package successfully installed.")
+
+    import requests
+
+    for root, dirs, files in os.walk("/app/data/theoretical"):
+        for file in files:
+            if file.endswith(".ttl.theoretical.trig"):
+                # Extraire le numéro de version à partir du nom de fichier
+                version = int(file.split('-')[-1].split('.ttl')[0])
+
+                # Vérifier si la version est inférieure ou égale au nombre de versions spécifiées
+                if version <= number_of_versions:
+                    filepath = os.path.join(root, file)
+                    print(f"\n{datetime.now().isoformat()} - [Triple Store] Version {filepath}")
+                    start = int(time.time() * 1000)
+
+                    # Effectuer la requête HTTP pour importer la version
+                    try:
+                        response = requests.post(
+                            'http://blazegraph:9999/blazegraph/sparql',
+                            headers={'Content-Type': 'application/x-trig'},
+                            files={'file': open(filepath, 'rb')},
+                        )
+                        response.raise_for_status()
+                    except requests.exceptions.RequestException as e:
+                        print(f"Failed to import {file}: {e}")
+
+                    end = int(time.time() * 1000)
+                    print(f"\n{datetime.now().isoformat()} - [Measure] (Import BG {file}): {end-start}ms;")
+
 
 class datasets:
     def __init__(self, layout: layout, environment: environment):
@@ -164,33 +276,3 @@ class datasets:
             volumes=[volume_mount]
         )
 
-    def create_datasets_importers(self, configurations: list[configuration], constants) -> None:
-        for configuration in configurations:
-            self.create_typed_dataset_importer(configuration, constants, 'relational')
-            self.create_typed_dataset_importer(configuration, constants, 'theoretical')
-
-    def create_typed_dataset_importer(self, configuration: configuration, constants, type: str) -> None:
-        if (type != "relational" and type != "theoretical"):
-            raise Exception(f"Unknown dataset type: {type}")
-
-        typed_importer_container_name = self.layout.create_typed_importer_container_name(configuration, type)
-
-        existing_volume = ExistingVolume(
-            name=self.environment.compute_dataset_volume_name(configuration),
-            claim_name=self.environment.compute_dataset_volume_name(configuration),
-            mount_path=f"/app/data",
-        )
-        configmap_volume = Volume(
-            name=self.environment.compute_configmap_volume_name(configuration, type),
-            configmap_name=self.environment.cluster.importers_configmap,
-        )
-
-        Container(
-            name=typed_importer_container_name,
-            image=constants.ubuntu,
-            image_pull_policy=models.ImagePullPolicy.always,
-            command=["/bin/bash", "-c", f"apt-get update && apt-get install -y curl && /app/scripts/import-dataset-{type}.sh"],
-            volumes=[existing_volume, configmap_volume],
-            volume_mounts=[VolumeMount(name=self.environment.compute_dataset_volume_name(configuration), mount_path="/app/scripts")]
-
-        )
