@@ -1,11 +1,10 @@
-import sys
 import experiment_layout
 from parse_arguments import parse_arguments
 from environment import environment
 from experiment_constants import constants
 from experiment_utils import print_environment, print_instance_args
 from databases import databases
-from servers import servers
+from servers import interface_servers
 from datasets import datasets, create_relational_dataset_importer, create_theoretical_dataset_importer
 from configuration import configuration
 from hera.workflows import (
@@ -29,7 +28,7 @@ if __name__ == "__main__":
     }
 
     experiment_dbs = databases(layout, environment)
-    experiment_servers = servers(layout, environment)
+    experiment_servers = interface_servers(layout, environment)
     experiment_datasets = datasets(layout, environment)
 
     dbs_configurations: list[configuration] = experiment_dbs.generate_databases_configurations(parameters)
@@ -43,12 +42,12 @@ if __name__ == "__main__":
         # function building all the dataset volumes
         experiment_datasets.create_datasets_volumes(datasets_configurations)
         # function building all the dataset containers
-        experiment_datasets.create_datasets_containers(datasets_configurations, constants)
+        experiment_datasets.create_datasets_generator_containers(datasets_configurations, constants)
         # function building all the dataset transformers
-        experiment_datasets.create_datasets_transformers(datasets_configurations, constants)
+        experiment_datasets.create_datasets_transformers_containers(datasets_configurations, constants)
 
         with DAG(name="converg-step"):
-            print_env = print_environment(name="print-environment", arguments={"parameters": parameters})
+            task_print_env = print_environment(name="print-environment", arguments={"parameters": parameters})
 
             for ds_configuration in datasets_configurations:
                 # --------------------- Begin DS tasking --------------------- # 
@@ -58,7 +57,7 @@ if __name__ == "__main__":
                     "step": ds_configuration.step,
                     "variability": ds_configuration.variability
                 }
-                print_ds_inst = print_instance_args(name=f'print-ds-instance-args-{str(ds_configuration)}', arguments={"arguments": instance_args})
+                task_print_ds_inst = print_instance_args(name=f'print-ds-instance-args-{str(ds_configuration)}', arguments={"arguments": instance_args})
                 
                 # init all the datasets volumes
                 volume_mount = environment.compute_dataset_volume_name(ds_configuration)
@@ -69,16 +68,21 @@ if __name__ == "__main__":
                 theoretical_transformer_container_name = layout.create_typed_transformer_container_name(ds_configuration, 'theoretical')
 
                 task_volume = Task(name=f'{volume_mount}-task', template=volume_mount)
-                task_bsbm = Task(name=f'{bsbm_container_name}-task', template=bsbm_container_name)
+                task_dataset_generator = Task(name=f'{bsbm_container_name}-task', template=bsbm_container_name)
                 task_relational_transformer = Task(name=f'{relational_transformer_container_name}-task', template=relational_transformer_container_name)
                 task_theoretical_transformer = Task(name=f'{theoretical_transformer_container_name}-task', template=theoretical_transformer_container_name)
                 # --------------------- End DS tasking --------------------- # 
 
-                # --------------------- Begin DB tasking --------------------- # 
-                max_config = max(datasets_configurations, key=lambda x: x.version)
+                # --------------------- Begin BSBM workflow --------------------- #
+                task_print_env >> task_print_ds_inst >> task_volume >> task_dataset_generator >> [task_relational_transformer, task_theoretical_transformer]
+                # --------------------- End BSBM workflow --------------------- #
 
-                # link the ds_configuration to the dbs_configuration
-                associated_dbs_configurations = [c for c in dbs_configurations if c.product == ds_configuration.product and c.step == ds_configuration.step and c.variability == ds_configuration.variability]
+                # --------------------- Begin DB tasking --------------------- # 
+                # link the current ds_configuration with a subset of dbs_configuration.
+                # This is done by matching the product, step, and variability (of the dbs_configuration) with the current ds_configuration
+                # A set of links from a ds_configuration to a their associated db_configuration is established if the product, step, and variability are the same
+                # the associated_dbs_configurations are distinct for each ds_configuration
+                associated_dbs_configurations = experiment_dbs.filter_databases_configurations(dbs_configurations, ds_configuration)
                 for db_configuration in associated_dbs_configurations:
                     instance_args = {
                         "version": db_configuration.version,
@@ -90,8 +94,8 @@ if __name__ == "__main__":
                         "quaque": constants.quaque,
                         "quader": constants.quader,
                     }
-                    print_dbr_inst = print_instance_args(name=f'print-dbr-instance-args-{str(db_configuration)}', arguments={"arguments": instance_args})
-                    print_bg_inst = print_instance_args(name=f'print-bg-instance-args-{str(db_configuration)}', arguments={"arguments": instance_args})
+                    task_print_dbr_inst = print_instance_args(name=f'print-dbr-instance-args-{str(db_configuration)}', arguments={"arguments": instance_args})
+                    task_print_bg_inst = print_instance_args(name=f'print-bg-instance-args-{str(db_configuration)}', arguments={"arguments": instance_args})
                     
                     # init all the databases and services (postgresql and blazegraph)
                     postgres_container_name = layout.create_postgres_container_name(db_configuration)
@@ -105,10 +109,6 @@ if __name__ == "__main__":
                     quader_service_name = layout.create_quader_service_name(db_configuration)
                     quaque_service_name = layout.create_quaque_service_name(db_configuration)
 
-                    # init all the transformers
-                    relational_importer_container_name = layout.create_typed_importer_container_name(db_configuration, 'relational')
-                    theoretical_importer_container_name = layout.create_typed_importer_container_name(db_configuration, 'theoretical')
-
                     # create the tasks for the databases and their services
                     task_bg_s = Task(name=f'{blazegraph_service_name}-task', template=blazegraph_service_name)
                     task_pg_s = Task(name=f'{postgres_service_name}-task', template=postgres_service_name)
@@ -121,34 +121,41 @@ if __name__ == "__main__":
                     task_quader_c = Task(name=f'{quader_container_name}-task', template=quader_container_name)
                     task_quaque_c = Task(name=f'{quaque_container_name}-task', template=quaque_container_name)
 
-                    # create the tasks for the transformers
+                    # init all the importers (relational and theoretical)
+                    relational_importer_container_name = layout.create_typed_importer_container_name(db_configuration, 'relational')
+                    theoretical_importer_container_name = layout.create_typed_importer_container_name(db_configuration, 'theoretical')
+
+                    # create the tasks for the importers
                     rel_importer_task = create_relational_dataset_importer(
                         name=f'{relational_importer_container_name}-task',
                         arguments={
+                            "python_requests_image": constants.python_requests,
                             "existing_volume_name": environment.compute_dataset_volume_name(ds_configuration),
                             "typed_importer_container_name": layout.create_typed_importer_container_name(db_configuration, 'relational'),
-                            "number_of_versions": max_config.version,
-                            "hostname": postgres_service_name
+                            "number_of_versions": db_configuration.version,
+                            "hostname": quader_service_name
                         },
                     )
                     theor_importer_task = create_theoretical_dataset_importer(
                         name=f'{theoretical_importer_container_name}-task',
                         arguments={
+                            "python_requests_image": constants.python_requests,
                             "existing_volume_name": environment.compute_dataset_volume_name(ds_configuration),
                             "typed_importer_container_name": layout.create_typed_importer_container_name(db_configuration, 'theoretical'),
-                            "number_of_versions": max_config.version,
+                            "number_of_versions": db_configuration.version,
                             "hostname": blazegraph_service_name
                         },                    
                     )
                     # --------------------- End DB tasking --------------------- #
 
                     # --------------------- Begin DB workflow --------------------- #
-                    print_env >> print_dbr_inst >> task_pg_s >> task_pg_c >> task_quader_s >> task_quader_c >> task_quaque_s >> task_quaque_c >> [rel_importer_task, theor_importer_task]
-                    print_env >> print_bg_inst >> task_bg_s >> task_bg_c
+                    task_print_env >> task_print_dbr_inst >> task_pg_s >> task_pg_c >> task_quader_s >> task_quader_c >> task_quaque_s >> task_quaque_c >> rel_importer_task
+                    task_print_env >> task_print_bg_inst >> task_bg_s >> task_bg_c >> theor_importer_task
                     # --------------------- End DB workflow --------------------- # 
-                
-                # --------------------- Begin DS workflow --------------------- #
-                print_env >> print_ds_inst >> task_volume >> task_bsbm >> task_relational_transformer >> task_theoretical_transformer >> [rel_importer_task, theor_importer_task]
-                # --------------------- End DS workflow --------------------- # 
+
+                    # --------------------- Begin transformer to importer workflow --------------------- #
+                    task_relational_transformer >> rel_importer_task
+                    task_theoretical_transformer >> theor_importer_task
+                    # --------------------- End transformer to importer workflow --------------------- # 
 
         w.create()

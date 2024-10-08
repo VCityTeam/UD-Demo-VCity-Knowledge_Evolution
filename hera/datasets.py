@@ -14,7 +14,7 @@ from itertools import product
 
 
 @script(
-    image="python:3.11",
+    image="{{inputs.parameters.python_requests_image}}",
     inputs=[
         Parameter(name="existing_volume_name", description=""),
         Parameter(name="typed_importer_container_name", description=""),
@@ -29,26 +29,26 @@ from itertools import product
         )
     ]
 )
-def create_relational_dataset_importer(existing_volume_name: str, typed_importer_container_name: str, number_of_versions: int, hostname: str) -> None:
-    import subprocess
-    import sys
+def create_relational_dataset_importer(
+    python_requests_image: str,
+    existing_volume_name: str,
+    typed_importer_container_name: str,
+    number_of_versions: int,
+    hostname: str
+) -> None:
     from datetime import datetime
     import os
     import time
-
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "requests"])
-    print("requests python package successfully installed.")
-
     import requests
 
     directory = "/app/data/relational"
 
     try:
         # Get the list of files and directories in the specified directory
-        files = os.listdir(directory)
+        files_and_directories = os.listdir(directory)
         
         # Filter out directories, keeping only files
-        files = [f for f in files if os.path.isfile(os.path.join(directory, f))]
+        files = [f for f in files_and_directories if os.path.isfile(os.path.join(directory, f))]
 
         # Print the files
         for file in files:
@@ -64,12 +64,12 @@ def create_relational_dataset_importer(existing_volume_name: str, typed_importer
 
                     # Effectuer la requête HTTP pour importer la version
                     try:
-                        response = requests.post(
-                            f'http://{hostname}:8080/import/version',
-                            headers={'Content-Type': 'multipart/form-data'},
-                            files={'file': open(filepath, 'rb')},
-                        )
-                        response.raise_for_status()
+                        with open(filepath, 'rb') as f:
+                            response = requests.post(
+                                f'http://{hostname}:8080/import/version',
+                                files=dict(file=f)
+                            )
+                            response.raise_for_status()
                     except requests.exceptions.RequestException as e:
                         print(f"Failed to import {filepath}: {e}")
 
@@ -78,9 +78,8 @@ def create_relational_dataset_importer(existing_volume_name: str, typed_importer
     except Exception as e:
         print(f"An error occurred: {e}")
 
-
 @script(
-    image="python:3.11",
+    image="{{inputs.parameters.python_requests_image}}",
     inputs=[
         Parameter(name="existing_volume_name", description=""),
         Parameter(name="typed_importer_container_name", description=""),
@@ -95,28 +94,27 @@ def create_relational_dataset_importer(existing_volume_name: str, typed_importer
         )
     ]
 )
-def create_theoretical_dataset_importer(existing_volume_name: str, typed_importer_container_name: str, number_of_versions: int, hostname: str) -> None:
-    import subprocess
-    import sys
+def create_theoretical_dataset_importer(
+    python_requests_image: str,
+    existing_volume_name: str,
+    typed_importer_container_name: str,
+    number_of_versions: int,
+    hostname: str
+) -> None:
     from datetime import datetime
     import os
     import time
-
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "requests"])
-    print("requests python package successfully installed.")
-
     import requests
 
     directory = "/app/data/theoretical"
 
     try:
         # Get the list of files and directories in the specified directory
-        files = os.listdir(directory)
+        files_and_directories = os.listdir(directory)
         
         # Filter out directories, keeping only files
-        files = [f for f in files if os.path.isfile(os.path.join(directory, f))]
+        files = [f for f in files_and_directories if os.path.isfile(os.path.join(directory, f))]
 
-        # Print the files
         for file in files:
             if file.endswith(".ttl.theoretical.trig"):
                 # Extraire le numéro de version à partir du nom de fichier
@@ -130,12 +128,13 @@ def create_theoretical_dataset_importer(existing_volume_name: str, typed_importe
 
                     # Effectuer la requête HTTP pour importer la version
                     try:
-                        response = requests.post(
-                            f'http://{hostname}:9999/blazegraph/sparql',
-                            headers={'Content-Type': 'application/x-trig'},
-                            files={'file': open(filepath, 'rb')},
-                        )
-                        response.raise_for_status()
+                        with open(filepath, 'r') as f:
+                            response = requests.post(
+                                f'http://{hostname}:9999/blazegraph/sparql',
+                                headers={'Content-Type': 'application/x-trig'},
+                                data=f.read(),
+                            )
+                            response.raise_for_status()
                     except requests.exceptions.RequestException as e:
                         print(f"Failed to import {filepath}: {e}")
 
@@ -180,7 +179,7 @@ class datasets:
                 manifest=manifest
             )
 
-    def create_datasets_containers(self, configurations: list[configuration], constants) -> None:        
+    def create_datasets_generator_containers(self, configurations: list[configuration], constants) -> None:        
         """
         Creates dataset containers based on the provided configurations.
         This method iterates over a list of configuration objects and creates a container for each configuration.
@@ -245,7 +244,7 @@ class datasets:
             for (version, product, step, variability) in configurations
         ]
     
-    def create_datasets_transformers(self, configurations: list[configuration], constants) -> None:        
+    def create_datasets_transformers_containers(self, configurations: list[configuration], constants) -> None:        
         """
         Creates dataset transformers for each configuration provided.
         This method iterates over a list of configurations and creates two types of dataset transformers 

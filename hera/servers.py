@@ -10,7 +10,7 @@ from experiment_layout import layout
 from environment import environment
 from configuration import configuration
 
-class servers:
+class interface_servers:
     def __init__(self, layout: layout, environment: environment):
         self.layout = layout
         self.environment = environment

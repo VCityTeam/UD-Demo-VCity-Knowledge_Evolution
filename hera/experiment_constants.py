@@ -10,5 +10,6 @@ constants = types.SimpleNamespace(
     quads_transformer = "vcity/quads-creator@sha256:cb63460db2c640c0708a95a9db16b9571c9c156603890896dd12341f1ebf9a00", 
     postgres_username = os.environ.get('POSTGRES_USER', "postgres"),
     postgres_password = os.environ.get('POSTGRES_PASSWORD', "password"),
-    ubuntu = "ubuntu@sha256:c62f1babc85f8756f395e6aabda682acd7c58a1b0c3bea250713cd0184a93efa"
+    ubuntu = "ubuntu@sha256:c62f1babc85f8756f395e6aabda682acd7c58a1b0c3bea250713cd0184a93efa",
+    python_requests = "xr09/python-requests@sha256:61a5289993bbbfbe4ab3299428855b83c490aeb277895c2bb6f16ab5f0f74abd"
 )
