@@ -31,8 +31,12 @@ if __name__ == "__main__":
     experiment_servers = interface_servers(layout, environment)
     experiment_datasets = datasets(layout, environment)
 
+    # Generate the configurations for the databases and datasets
     dbs_configurations: list[configuration] = experiment_dbs.generate_databases_configurations(parameters)
-    datasets_configurations: list[configuration] = experiment_datasets.generate_datasets_configurations(parameters)
+    # Generate the configurations for the datasets (dss is a subset of ds)
+    # for a set of configuration having the same product, step and variability, only the maximum version is considered
+    # because the generated dataset (with the maximum version) contains all other configuration with the same product, step, and variability
+    dss_configurations: list[configuration] = experiment_datasets.generate_datasets_configurations(parameters)
 
     with Workflow(generate_name="converg-experiment-", entrypoint="converg-step") as w:
         # function building all the database containers/services
@@ -40,16 +44,16 @@ if __name__ == "__main__":
         # function building all the server containers/services
         experiment_servers.create_servers_containers_services(dbs_configurations, constants)
         # function building all the dataset volumes
-        experiment_datasets.create_datasets_volumes(datasets_configurations)
+        experiment_datasets.create_datasets_volumes(dss_configurations)
         # function building all the dataset containers
-        experiment_datasets.create_datasets_generator_containers(datasets_configurations, constants)
+        experiment_datasets.create_datasets_generator_containers(dss_configurations, constants)
         # function building all the dataset transformers
-        experiment_datasets.create_datasets_transformers_containers(datasets_configurations, constants)
+        experiment_datasets.create_datasets_transformers_containers(dss_configurations, constants)
 
         with DAG(name="converg-step"):
             task_print_env = print_environment(name="print-environment", arguments={"parameters": parameters})
 
-            for ds_configuration in datasets_configurations:
+            for ds_configuration in dss_configurations:
                 # --------------------- Begin DS tasking --------------------- # 
                 instance_args = {
                     "version": ds_configuration.version,
@@ -80,9 +84,8 @@ if __name__ == "__main__":
                 # --------------------- Begin DB tasking --------------------- # 
                 # link the current ds_configuration with a subset of dbs_configuration.
                 # This is done by matching the product, step, and variability (of the dbs_configuration) with the current ds_configuration
-                # A set of links from a ds_configuration to a their associated db_configuration is established if the product, step, and variability are the same
-                # the associated_dbs_configurations are distinct for each ds_configuration
-                associated_dbs_configurations = experiment_dbs.filter_databases_configurations(dbs_configurations, ds_configuration)
+                # we match a ds_configuration to configurations with the same product, step, and variability but different versions
+                associated_dbs_configurations = experiment_dbs.filter_dbs_configurations_by_ds_configuration(dbs_configurations, ds_configuration)
                 for db_configuration in associated_dbs_configurations:
                     instance_args = {
                         "version": db_configuration.version,
@@ -131,7 +134,6 @@ if __name__ == "__main__":
                         arguments={
                             "python_requests_image": constants.python_requests,
                             "existing_volume_name": environment.compute_dataset_volume_name(ds_configuration),
-                            "typed_importer_container_name": layout.create_typed_importer_container_name(db_configuration, 'relational'),
                             "number_of_versions": db_configuration.version,
                             "hostname": quader_service_name
                         },
@@ -141,7 +143,6 @@ if __name__ == "__main__":
                         arguments={
                             "python_requests_image": constants.python_requests,
                             "existing_volume_name": environment.compute_dataset_volume_name(ds_configuration),
-                            "typed_importer_container_name": layout.create_typed_importer_container_name(db_configuration, 'theoretical'),
                             "number_of_versions": db_configuration.version,
                             "hostname": blazegraph_service_name
                         },                    

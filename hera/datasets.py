@@ -16,8 +16,8 @@ from itertools import product
 @script(
     image="{{inputs.parameters.python_requests_image}}",
     inputs=[
-        Parameter(name="existing_volume_name", description=""),
-        Parameter(name="typed_importer_container_name", description=""),
+        Parameter(name="python_requests_image", description="The name of the Python image to use"),
+        Parameter(name="existing_volume_name", description="The name of the existing volume containing the data to import"),
         Parameter(name="number_of_versions", description="The number of versions to import"),
         Parameter(name="hostname", description="The hostname of the server to import the data into"),
     ],
@@ -25,14 +25,13 @@ from itertools import product
         ExistingVolume(
             name="{{inputs.parameters.existing_volume_name}}",
             claim_name="{{inputs.parameters.existing_volume_name}}",
-            mount_path=f"/app/data",
+            mount_path="/app/data",
         )
     ]
 )
 def create_relational_dataset_importer(
     python_requests_image: str,
     existing_volume_name: str,
-    typed_importer_container_name: str,
     number_of_versions: int,
     hostname: str
 ) -> None:
@@ -81,8 +80,8 @@ def create_relational_dataset_importer(
 @script(
     image="{{inputs.parameters.python_requests_image}}",
     inputs=[
-        Parameter(name="existing_volume_name", description=""),
-        Parameter(name="typed_importer_container_name", description=""),
+        Parameter(name="python_requests_image", description="The name of the Python image to use"),
+        Parameter(name="existing_volume_name", description="The name of the existing volume containing the data to import"),
         Parameter(name="number_of_versions", description="The number of versions to import"),
         Parameter(name="hostname", description="The hostname of the server to import the data into"),
     ],
@@ -90,14 +89,13 @@ def create_relational_dataset_importer(
         ExistingVolume(
             name="{{inputs.parameters.existing_volume_name}}",
             claim_name="{{inputs.parameters.existing_volume_name}}",
-            mount_path=f"/app/data",
+            mount_path="/app/data",
         )
     ]
 )
 def create_theoretical_dataset_importer(
     python_requests_image: str,
     existing_volume_name: str,
-    typed_importer_container_name: str,
     number_of_versions: int,
     hostname: str
 ) -> None:
@@ -140,6 +138,71 @@ def create_theoretical_dataset_importer(
 
                     end = int(time.time() * 1000)
                     print(f"\n{datetime.now().isoformat()} - [Measure] (Import BG {file}): {end-start}ms;")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+@script(
+    image="{{inputs.parameters.python_requests_image}}",
+    inputs=[
+        Parameter(name="python_requests_image", description="The name of the Python image to use"),
+        Parameter(name="existing_volume_name", description="The name of the existing volume containing the data to import"),
+        Parameter(name="number_of_versions", description="The number of versions to import"),
+        Parameter(name="hostname", description="The hostname of the server to import the data into"),
+    ],
+    volumes=[
+        ExistingVolume(
+            name="{{inputs.parameters.existing_volume_name}}",
+            claim_name="{{inputs.parameters.existing_volume_name}}",
+            mount_path="/app/data",
+        )
+    ]
+)
+def create_theoretical_server_querier(
+    python_requests_image: str,
+    existing_volume_name: str,
+    hostname: str
+) -> None:
+    from datetime import datetime
+    import os
+    import time
+    import requests
+
+    directory = "/app/data/theoretical/queries"
+
+    try:
+        # Get the list of files and directories in the specified directory
+        files_and_directories = os.listdir(directory)
+        
+        # Filter out directories, keeping only files
+        files = [f for f in files_and_directories if os.path.isfile(os.path.join(directory, f))]
+
+        for file in files:
+            if file.endswith(".rq"):
+                # Extract the query number from the file name
+                query_number = int(file.split('-')[-1].split('.ttl')[0])
+
+                # Print the query number
+                print(f"\n{datetime.now().isoformat()} - [Triple Store] Query {query_number}")
+                start = int(time.time() * 1000)
+                filepath = os.path.join(directory, file)
+
+                # Perform the HTTP request to query the server
+                try:
+                    with open(filepath, 'r') as f:
+                        response = requests.post(
+                            f'http://{hostname}:9999/blazegraph/namespace/kb/sparql',
+                            headers={
+                                'Content-Type': 'application/sparql-query',
+                                'Accept': 'application/sparql-results+json'
+                                },
+                            data=f.read(),
+                        )
+                        response.raise_for_status()
+                except requests.exceptions.RequestException as e:
+                    print(f"Failed to query {filepath}: {e}")
+
+                end = int(time.time() * 1000)
+                print(f"\n{datetime.now().isoformat()} - [Measure] (Query BG {file}): {end-start}ms;")
     except Exception as e:
         print(f"An error occurred: {e}")
 
@@ -244,7 +307,7 @@ class datasets:
             for (version, product, step, variability) in configurations
         ]
     
-    def create_datasets_transformers_containers(self, configurations: list[configuration], constants) -> None:        
+    def create_datasets_transformers(self, configurations: list[configuration], constants) -> None:        
         """
         Creates dataset transformers for each configuration provided.
         This method iterates over a list of configurations and creates two types of dataset transformers 

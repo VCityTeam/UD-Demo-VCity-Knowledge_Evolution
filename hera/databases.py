@@ -48,9 +48,8 @@ class databases:
             for (version, product, step, variability) in configurations
         ]
     
-    def filter_databases_configurations(self, dbs_configurations: list[configuration], ds_configuration: configuration) -> list:
+    def filter_dbs_configurations_by_ds_configuration(self, dbs_configurations: list[configuration], ds_configuration: configuration) -> list:
         return [c for c in dbs_configurations if c.product == ds_configuration.product and c.step == ds_configuration.step and c.variability == ds_configuration.variability]
-
 
     def create_postgres_container_service(self, configuration: configuration, constants) -> None:
         """
