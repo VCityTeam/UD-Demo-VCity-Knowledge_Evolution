@@ -57,6 +57,10 @@ class layout:
         return f"{layout.create_name('bsbm', configuration)}-container"
     
     @staticmethod
+    def create_querier_container_name(configuration):
+        return f"{layout.create_name('querier', configuration)}-container"
+    
+    @staticmethod
     def create_typed_transformer_container_name(configuration, type):
         return f"{layout.create_name(f'{type}-transformer', configuration)}-container"
 

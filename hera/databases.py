@@ -151,7 +151,7 @@ class databases:
             manifest=manifest,
         )
 
-    def create_dbs_containers_services(self, configurations: list, constants) -> None:
+    def create_dbs_containers_services(self, configurations: list[configuration], constants) -> None:
         """
         Creates database containers and services for the given configurations.
 
@@ -168,3 +168,33 @@ class databases:
         for configuration in configurations:
             self.create_postgres_container_service(configuration, constants)
             self.create_blazegraph_container_service(configuration, constants)
+
+    def create_dbs_queriers(self, configurations: list[configuration], constants) -> None:
+        """
+        Creates Quads-Querier containers and services for the given configurations.
+
+        This method iterates over a list of configurations and creates Quads-Querier
+        container services for each configuration.
+
+        Args:
+            configurations (list): A list of configuration objects.
+            constants: A set of constants used for creating the container services.
+
+        Returns:
+            None
+        """
+        for configuration in configurations:
+            self.create_querier_container(configuration, constants)
+
+    def create_querier_container(self, configuration: configuration, constants) -> None:
+        querier_container_name = self.layout.create_querier_container_name(configuration)
+
+        blazegraph_service_name = self.layout.create_blazegraph_service_name(configuration)
+        quaque_service_name = layout.create_quaque_service_name(configuration)
+
+        Container(
+            name=querier_container_name,
+            image=constants.quads_querier,
+            image_pull_policy=models.ImagePullPolicy.always,
+            args=[blazegraph_service_name, quaque_service_name]
+        )

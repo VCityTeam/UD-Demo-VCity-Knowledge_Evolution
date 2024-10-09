@@ -49,12 +49,14 @@ if __name__ == "__main__":
         experiment_datasets.create_datasets_generator_containers(dss_configurations, constants)
         # function building all the dataset transformers
         experiment_datasets.create_datasets_transformers_containers(dss_configurations, constants)
+        # function building all the databases queriers
+        experiment_dbs.create_dbs_queriers(dbs_configurations, constants)
 
         with DAG(name="converg-step"):
             task_print_env = print_environment(name="print-environment", arguments={"parameters": parameters})
 
             for ds_configuration in dss_configurations:
-                # --------------------- Begin DS tasking --------------------- # 
+                # --------------------- Begin DS tasking --------------------- #
                 instance_args = {
                     "version": ds_configuration.version,
                     "product": ds_configuration.product,
@@ -106,17 +108,17 @@ if __name__ == "__main__":
                     postgres_service_name = layout.create_postgres_service_name(db_configuration)
                     blazegraph_service_name = layout.create_blazegraph_service_name(db_configuration)
 
-                    # init all the servers (quader and quaque)
-                    quader_container_name = layout.create_quader_container_name(db_configuration)
-                    quaque_container_name = layout.create_quaque_container_name(db_configuration)
-                    quader_service_name = layout.create_quader_service_name(db_configuration)
-                    quaque_service_name = layout.create_quaque_service_name(db_configuration)
-
                     # create the tasks for the databases and their services
                     task_bg_s = Task(name=f'{blazegraph_service_name}-task', template=blazegraph_service_name)
                     task_pg_s = Task(name=f'{postgres_service_name}-task', template=postgres_service_name)
                     task_pg_c = Task(name=f'{postgres_container_name}-task', template=postgres_container_name)
                     task_bg_c = Task(name=f'{blazegraph_container_name}-task', template=blazegraph_container_name)
+
+                    # init all the servers and their associated service (quader and quaque)
+                    quader_container_name = layout.create_quader_container_name(db_configuration)
+                    quaque_container_name = layout.create_quaque_container_name(db_configuration)
+                    quader_service_name = layout.create_quader_service_name(db_configuration)
+                    quaque_service_name = layout.create_quaque_service_name(db_configuration)
 
                     # create the tasks for the servers and their services
                     task_quader_s = Task(name=f'{quader_service_name}-task', template=quader_service_name)
@@ -147,6 +149,13 @@ if __name__ == "__main__":
                             "hostname": blazegraph_service_name
                         },                    
                     )
+
+                    # create the names for the queriers
+                    querier_container_name = layout.create_querier_container_name(db_configuration)
+
+                    # create the tasks for the queriers
+                    task_querier = Task(name=f'{querier_container_name}-task', template=querier_container_name)
+
                     # --------------------- End DB tasking --------------------- #
 
                     # --------------------- Begin DB workflow --------------------- #
@@ -155,8 +164,8 @@ if __name__ == "__main__":
                     # --------------------- End DB workflow --------------------- # 
 
                     # --------------------- Begin transformer to importer workflow --------------------- #
-                    task_relational_transformer >> rel_importer_task
-                    task_theoretical_transformer >> theor_importer_task
+                    task_relational_transformer >> rel_importer_task >> task_querier
+                    task_theoretical_transformer >> theor_importer_task >> task_querier
                     # --------------------- End transformer to importer workflow --------------------- # 
 
         w.create()
