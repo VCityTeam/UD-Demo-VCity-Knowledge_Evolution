@@ -30,8 +30,6 @@ from itertools import product
     ]
 )
 def create_relational_dataset_importer(
-    python_requests_image: str,
-    existing_volume_name: str,
     number_of_versions: int,
     hostname: str
 ) -> None:
@@ -39,6 +37,7 @@ def create_relational_dataset_importer(
     import os
     import time
     import requests
+    import sys
 
     directory = "/app/data/relational"
 
@@ -71,6 +70,7 @@ def create_relational_dataset_importer(
                             response.raise_for_status()
                     except requests.exceptions.RequestException as e:
                         print(f"Failed to import {filepath}: {e}")
+                        sys.exit(1)
 
                     end = int(time.time() * 1000)
                     print(f"\n{datetime.now().isoformat()} - [Measure] (Import STS {file}): {end-start}ms;")
@@ -94,8 +94,6 @@ def create_relational_dataset_importer(
     ]
 )
 def create_theoretical_dataset_importer(
-    python_requests_image: str,
-    existing_volume_name: str,
     number_of_versions: int,
     hostname: str
 ) -> None:
@@ -103,6 +101,7 @@ def create_theoretical_dataset_importer(
     import os
     import time
     import requests
+    import sys
 
     directory = "/app/data/theoretical"
 
@@ -135,6 +134,7 @@ def create_theoretical_dataset_importer(
                             response.raise_for_status()
                     except requests.exceptions.RequestException as e:
                         print(f"Failed to import {filepath}: {e}")
+                        sys.exit(1)
 
                     end = int(time.time() * 1000)
                     print(f"\n{datetime.now().isoformat()} - [Measure] (Import BG {file}): {end-start}ms;")
