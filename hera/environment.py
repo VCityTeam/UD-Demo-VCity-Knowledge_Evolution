@@ -34,8 +34,11 @@ class environment(num_exp_environment):
         return f"configmap-{type}-{configuration.product}-{configuration.version}-{configuration.step}-{configuration.variability}"
 
     def compute_dataset_volume_size(self, configuration: configuration):
-        factor = (configuration.product + configuration.step * configuration.version) * 5 # 5 is a magic number
-        return f'{factor}Mi'
+        number_of_datasets = 3 # (triples + quads(relational) + quads(graph))
+        number_of_triples_one_version = configuration.product + configuration.step * configuration.version
+        size_one_triple = 0.05 # Mi
+        total = (number_of_triples_one_version * size_one_triple) * (configuration.version * number_of_datasets)
+        return f'{total}Mi'
 
     def database_data(self, configuration):
         return f"{self.persisted_volume.mount_path}/{str(configuration)}"

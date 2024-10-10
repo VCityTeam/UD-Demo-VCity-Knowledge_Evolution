@@ -79,6 +79,13 @@ class databases:
                 Env(name="POSTGRES_USER", value=constants.postgres_username),
                 Env(name="POSTGRES_PASSWORD", value=constants.postgres_password),
                 Env(name="PGDATA", value=self.environment.database_data(configuration)),
+            ],
+            command=[
+                "postgres", 
+                "-c", "log_duration=on",
+                "-c", "log_statement=all",
+                "-c", "log_destination=stderr,jsonlog",
+                "-c", "logging_collector=on"
             ]
         )
 
@@ -208,6 +215,7 @@ class databases:
         Creates a service remover for the given configurations.
 
         This method creates a service remover for each configuration in the list.
+        ref: https://github.com/argoproj-labs/hera/blob/a08f744cd9d7ca30091e7ab51e80bd18e3116010/examples/workflows/upstream/resource_delete_with_flags.py
 
         Args:
             configurations (list): A list of configuration objects.

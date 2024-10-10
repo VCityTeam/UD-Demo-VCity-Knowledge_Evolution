@@ -38,7 +38,7 @@ if __name__ == "__main__":
     # because the generated dataset (with the maximum version) contains all other configuration with the same product, step, and variability
     dss_configurations: list[configuration] = experiment_datasets.generate_datasets_configurations(parameters)
 
-    with Workflow(generate_name="converg-experiment-", entrypoint="converg-step") as w:
+    with Workflow(generate_name="converg-experiment-", entrypoint="converg-step", parallelism=50) as w:
         # function building all the database containers/services
         experiment_dbs.create_dbs_containers_services(dbs_configurations, constants)
         # function building all the server containers/services
@@ -149,7 +149,7 @@ if __name__ == "__main__":
                             "existing_volume_name": environment.compute_dataset_volume_name(ds_configuration),
                             "number_of_versions": db_configuration.version,
                             "hostname": blazegraph_service_name
-                        },                    
+                        },
                     )
 
                     # create the names for the queriers

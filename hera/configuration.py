@@ -9,7 +9,7 @@ class configuration:
         self.variability = variability
 
     def __str__(self):
-        return f"{self.version}-{self.product}-{self.step}-{self.variability}"
+        return f"ve{self.version}-pr{self.product}-st{self.step}-va{self.variability}"
     
     def __repr__(self):
-        return f"{self.version}-{self.product}-{self.step}-{self.variability}"
+        return str(self)
