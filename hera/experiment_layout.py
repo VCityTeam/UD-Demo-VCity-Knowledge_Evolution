@@ -21,6 +21,10 @@ class layout:
         return f'jdbc:postgresql://{host}:5432/{layout.create_database_identifier(configuration)}'
     
     @staticmethod
+    def create_service_remover_name(configuration):
+        return f"{layout.create_name('service-remover', configuration)}"
+    
+    @staticmethod
     def create_postgres_container_name(configuration):
         return f"{layout.create_name('postgres', configuration)}-container"
     

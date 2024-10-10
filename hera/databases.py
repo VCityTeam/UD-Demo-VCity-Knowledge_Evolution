@@ -86,6 +86,8 @@ class databases:
                     "kind: Service\n"
                     "metadata:\n"
                     f"   name: {postgres_service_name}\n"
+                    "   labels:\n"
+                    f"       cleanup: '{str(configuration)}'\n"
                     "spec:\n"
                     "   selector:\n"
                     f"       app: {postgres_container_name}\n"
@@ -138,6 +140,8 @@ class databases:
                     "kind: Service\n"
                     "metadata:\n"
                     f"   name: {blazegraph_service_name}\n"
+                    "   labels:\n"
+                    f"       cleanup: '{str(configuration)}'\n"
                     "spec:\n"
                     "   selector:\n"
                     f"       app: {blazegraph_container_name}\n"
@@ -198,3 +202,22 @@ class databases:
             image_pull_policy=models.ImagePullPolicy.always,
             args=[blazegraph_service_name, quaque_service_name]
         )
+
+    def create_services_remover(self, configurations: list[configuration]) -> None:
+        """
+        Creates a service remover for the given configurations.
+
+        This method creates a service remover for each configuration in the list.
+
+        Args:
+            configurations (list): A list of configuration objects.
+
+        Returns:
+            None
+        """
+        for configuration in configurations:
+            Resource(
+                name=self.layout.create_service_remover_name(configuration),
+                action="delete",
+                flags=["services", "--selector", f"cleanup={str(configuration)}"]
+            )

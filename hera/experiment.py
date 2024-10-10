@@ -51,6 +51,8 @@ if __name__ == "__main__":
         experiment_datasets.create_datasets_transformers_containers(dss_configurations, constants)
         # function building all the databases queriers
         experiment_dbs.create_dbs_queriers(dbs_configurations, constants)
+        # function building all services remover
+        experiment_dbs.create_services_remover(dbs_configurations)
 
         with DAG(name="converg-step"):
             task_print_env = print_environment(name="print-environment", arguments={"parameters": parameters})
@@ -156,6 +158,10 @@ if __name__ == "__main__":
                     # create the tasks for the queriers
                     task_querier = Task(name=f'{querier_container_name}-task', template=querier_container_name)
 
+                    # task to remove all the services
+                    delete_services_template_name = layout.create_service_remover_name(db_configuration)
+                    task_remove_services = Task(name=f'{delete_services_template_name}-task', template=delete_services_template_name)
+
                     # --------------------- End DB tasking --------------------- #
 
                     # --------------------- Begin DB workflow --------------------- #
@@ -167,5 +173,7 @@ if __name__ == "__main__":
                     task_relational_transformer >> rel_importer_task >> task_querier
                     task_theoretical_transformer >> theor_importer_task >> task_querier
                     # --------------------- End transformer to importer workflow --------------------- # 
+
+                    task_querier >> task_remove_services
 
         w.create()
