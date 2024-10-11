@@ -43,3 +43,15 @@ def create_service_manifest(metadata_name: str, cleanup: str, selector_name:str,
             "   ports:\n"
             f"   - port: {port}\n"
             f"     targetPort: {target_port}\n")
+
+def create_volume_manifest(metadata_name: str, accessModes: str, storage: str) -> str:
+    return ("apiVersion: v1\n"
+                "kind: PersistentVolumeClaim\n"
+                "metadata:\n"
+                f"   name: {metadata_name}\n"
+                "spec:\n"
+                "   accessModes:\n"
+                f"       - {accessModes}\n"
+                "   resources:\n"
+                "       requests:\n"
+                f"          storage: {storage}\n")

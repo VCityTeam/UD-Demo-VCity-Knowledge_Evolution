@@ -43,6 +43,8 @@ if __name__ == "__main__":
         experiment_dbs.create_dbs_containers_services(dbs_configurations, constants)
         # function building all the server containers/services
         experiment_servers.create_servers_containers_services(dbs_configurations, constants)
+        # function building all the logging volumes
+        experiment_datasets.create_logging_volumes(dbs_configurations)
         # function building all the dataset volumes
         experiment_datasets.create_datasets_volumes(dss_configurations)
         # function building all the dataset containers
@@ -103,12 +105,18 @@ if __name__ == "__main__":
                     }
                     task_print_dbr_inst = print_instance_args(name=f'print-dbr-instance-args-{str(db_configuration)}', arguments={"arguments": instance_args})
                     task_print_bg_inst = print_instance_args(name=f'print-bg-instance-args-{str(db_configuration)}', arguments={"arguments": instance_args})
-                    
+
+                    # init all the logging volumes
+                    logging_volume_mount_name = environment.compute_logging_volume_name(db_configuration)
+
                     # init all the databases and services (postgresql and blazegraph)
                     postgres_container_name = layout.create_postgres_container_name(db_configuration)
                     blazegraph_container_name = layout.create_blazegraph_container_name(db_configuration)
                     postgres_service_name = layout.create_postgres_service_name(db_configuration)
                     blazegraph_service_name = layout.create_blazegraph_service_name(db_configuration)
+
+                    # create the tasks for the logging volumes
+                    task_logging_volume = Task(name=f'{logging_volume_mount_name}-task', template=logging_volume_mount_name)
 
                     # create the tasks for the databases and their services
                     task_bg_s = Task(name=f'{blazegraph_service_name}-task', template=blazegraph_service_name)
@@ -165,7 +173,7 @@ if __name__ == "__main__":
                     # --------------------- End DB tasking --------------------- #
 
                     # --------------------- Begin DB workflow --------------------- #
-                    task_print_env >> task_print_dbr_inst >> task_pg_s >> task_pg_c >> task_quader_s >> task_quader_c >> task_quaque_s >> task_quaque_c >> rel_importer_task
+                    task_print_env >> task_print_dbr_inst >> [task_logging_volume, task_pg_s, task_quader_s, task_quaque_s] >> task_pg_c >> task_quader_c >> task_quaque_c >> rel_importer_task
                     task_print_env >> task_print_bg_inst >> task_bg_s >> task_bg_c >> theor_importer_task
                     # --------------------- End DB workflow --------------------- # 
 

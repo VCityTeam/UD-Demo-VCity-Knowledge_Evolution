@@ -7,7 +7,7 @@ from hera.workflows import (
     Parameter,
     Resources
 )
-from hera.workflows.models import VolumeMount
+from experiment_utils import create_volume_manifest
 from experiment_layout import layout
 from environment import environment
 from configuration import configuration
@@ -163,18 +163,41 @@ class datasets:
             None
         """
         for configuration in configurations:
-            manifest = ("apiVersion: v1\n"
-                "kind: PersistentVolumeClaim\n"
-                "metadata:\n"
-                f"   name: {self.environment.compute_dataset_volume_name(configuration)}\n"
-                "spec:\n"
-                "   accessModes:\n"
-                "       - ReadWriteOnce\n"
-                "   resources:\n"
-                "       requests:\n"
-                f"          storage: {self.environment.compute_dataset_volume_size(configuration)}\n")
+            manifest = create_volume_manifest(
+                self.environment.compute_dataset_volume_name(configuration),
+                "ReadWriteOnce",
+                self.environment.compute_dataset_volume_size(configuration)
+            )
+
             Resource(
                 name=self.environment.compute_dataset_volume_name(configuration),
+                action="create",
+                set_owner_reference=True,
+                manifest=manifest
+            )
+
+    def create_logging_volumes(self, configurations: list[configuration]) -> None:
+        """
+        Creates PersistentVolumeClaim resources for each configuration provided.
+        This method iterates over a list of configurations and generates a 
+        PersistentVolumeClaim manifest for each one. The manifest is then used 
+        to create a resource with the specified name, action, and owner reference.
+        Args:
+            configurations (list[configuration]): A list of configuration objects 
+            that contain the necessary information to create the PersistentVolumeClaim 
+            resources.
+        Returns:
+            None
+        """
+        for configuration in configurations:
+            manifest = create_volume_manifest(
+                self.environment.compute_dataset_volume_name(configuration),
+                "ReadWriteOnce",
+                self.environment.compute_dataset_volume_size(configuration)
+            )
+
+            Resource(
+                name=self.environment.compute_logging_volume_name(configuration),
                 action="create",
                 set_owner_reference=True,
                 manifest=manifest
