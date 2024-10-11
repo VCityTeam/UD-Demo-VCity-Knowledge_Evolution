@@ -4,7 +4,8 @@ from hera.workflows import (
     ExistingVolume,
     Resource,
     script,
-    Parameter
+    Parameter,
+    Resources
 )
 from hera.workflows.models import VolumeMount
 from experiment_layout import layout
@@ -27,7 +28,8 @@ from itertools import product
             claim_name="{{inputs.parameters.existing_volume_name}}",
             mount_path="/app/data",
         )
-    ]
+    ],
+    resources=Resources(memory_request="2Gi")
 )
 def create_relational_dataset_importer(
     number_of_versions: int,
@@ -91,7 +93,8 @@ def create_relational_dataset_importer(
             claim_name="{{inputs.parameters.existing_volume_name}}",
             mount_path="/app/data",
         )
-    ]
+    ],
+    resources=Resources(memory_request="2Gi")
 )
 def create_theoretical_dataset_importer(
     number_of_versions: int,
@@ -204,7 +207,8 @@ class datasets:
                 image=constants.bsbm,
                 image_pull_policy=models.ImagePullPolicy.always,
                 args=["generate-n", configuration.version, configuration.product, configuration.step, configuration.variability],
-                volumes=[volume_mount]
+                volumes=[volume_mount],
+                resources=Resources(memory_request="4Gi", cpu_request="2")
             )
 
     def generate_datasets_configurations(self, arguments: object) -> list[configuration]:
@@ -291,6 +295,7 @@ class datasets:
                 type,
                 "BSBM"
             ],
-            volumes=[volume_mount]
+            volumes=[volume_mount],
+            resources=Resources(memory_request="4Gi", cpu_request="2")
         )
 

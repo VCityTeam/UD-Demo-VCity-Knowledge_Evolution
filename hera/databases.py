@@ -1,8 +1,7 @@
 from hera.workflows import (
-    ConfigMapEnvFrom,
+    Resources,
     Container,
     Resource,
-    ConfigMapEnvFrom,
     Env,
     models
 )
@@ -80,13 +79,13 @@ class databases:
                 Env(name="POSTGRES_PASSWORD", value=constants.postgres_password),
                 Env(name="PGDATA", value=self.environment.database_data(configuration)),
             ],
-            command=[
-                "postgres", 
+            args=[
                 "-c", "log_duration=on",
                 "-c", "log_statement=all",
                 "-c", "log_destination=stderr,jsonlog",
                 "-c", "logging_collector=on"
-            ]
+            ],
+            resources=Resources(memory_request="8Gi", cpu_request="2")
         )
 
         manifest = ("apiVersion: v1\n"
@@ -140,7 +139,8 @@ class databases:
                 ),
                 Env(name="BLAZEGRAPH_TIMEOUT", value="180000"),
                 Env(name="BLAZEGRAPH_MEMORY", value="32G"),
-            ]
+            ],
+            resources=Resources(memory_request="8Gi", cpu_request="2")
         )
 
         manifest = ("apiVersion: v1\n"

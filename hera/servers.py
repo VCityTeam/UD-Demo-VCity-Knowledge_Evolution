@@ -1,8 +1,7 @@
 from hera.workflows import (
-    ConfigMapEnvFrom,
     Container,
     Resource,
-    ConfigMapEnvFrom,
+    Resources,
     Env,
     models
 )
@@ -55,7 +54,8 @@ class interface_servers:
                 ),
                 Env(name="SPRING_DATASOURCE_USERNAME", value=constants.postgres_username),
                 Env(name="SPRING_DATASOURCE_PASSWORD", value=constants.postgres_password),
-            ]
+            ],
+            resources=Resources(memory_request="8Gi", cpu_request="2")
         )
 
         manifest = ("apiVersion: v1\n"
@@ -101,7 +101,8 @@ class interface_servers:
                 Env(name="DATASOURCE_URL", value=self.layout.create_relational_database_url(configuration)),
                 Env(name="DATASOURCE_USERNAME", value=constants.postgres_username),
                 Env(name="DATASOURCE_PASSWORD", value=constants.postgres_password),
-            ]
+            ],
+            resources=Resources(memory_request="8Gi", cpu_request="2")
         )
 
         manifest = ("apiVersion: v1\n"
