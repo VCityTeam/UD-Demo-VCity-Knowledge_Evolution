@@ -5,6 +5,7 @@ from hera.workflows import (
     Env,
     models
 )
+from experiment_utils import create_service_manifest
 from experiment_layout import layout
 from environment import environment
 from configuration import configuration
@@ -58,19 +59,8 @@ class interface_servers:
             resources=Resources(memory_request="8Gi", cpu_request="2")
         )
 
-        manifest = ("apiVersion: v1\n"
-                    "kind: Service\n"
-                    "metadata:\n"
-                    f"   name: {quader_service_name}\n"
-                    "   labels:\n"
-                    f"       cleanup: '{str(configuration)}'\n"
-                    "spec:\n"
-                    "   selector:\n"
-                    f"       app: {quader_container_name}\n"
-                    "   type: ClusterIP\n"
-                    "   ports:\n"
-                    "   - port: 8080\n"
-                    "     targetPort: 8080\n")
+        manifest = create_service_manifest(quader_service_name, str(configuration), quader_container_name, 8080, 8080)
+
         Resource(
             name=quader_service_name,
             action="create",
@@ -105,19 +95,8 @@ class interface_servers:
             resources=Resources(memory_request="8Gi", cpu_request="2")
         )
 
-        manifest = ("apiVersion: v1\n"
-                    "kind: Service\n"
-                    "metadata:\n"
-                    f"   name: {quaque_service_name}\n"
-                    "   labels:\n"
-                    f"       cleanup: '{str(configuration)}'\n"
-                    "spec:\n"
-                    "   selector:\n"
-                    f"       app: {quaque_container_name}\n"
-                    "   type: ClusterIP\n"
-                    "   ports:\n"
-                    "   - port: 8081\n"
-                    "     targetPort: 8081\n")
+        manifest = create_service_manifest(quaque_service_name, str(configuration), quaque_container_name, 8081, 8081)
+
         Resource(
             name=quaque_service_name,
             action="create",

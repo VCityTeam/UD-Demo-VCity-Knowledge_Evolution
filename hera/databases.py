@@ -5,6 +5,7 @@ from hera.workflows import (
     Env,
     models
 )
+from experiment_utils import create_service_manifest
 from experiment_layout import layout
 from environment import environment
 from configuration import configuration
@@ -88,19 +89,7 @@ class databases:
             resources=Resources(memory_request="8Gi", cpu_request="2")
         )
 
-        manifest = ("apiVersion: v1\n"
-                    "kind: Service\n"
-                    "metadata:\n"
-                    f"   name: {postgres_service_name}\n"
-                    "   labels:\n"
-                    f"       cleanup: '{str(configuration)}'\n"
-                    "spec:\n"
-                    "   selector:\n"
-                    f"       app: {postgres_container_name}\n"
-                    "   type: ClusterIP\n"
-                    "   ports:\n"
-                    "   - port: 5432\n"
-                    "     targetPort: 5432\n")
+        manifest = create_service_manifest(postgres_service_name, str(configuration), postgres_container_name, 5432, 5432)
 
         Resource(
             name=postgres_service_name,
@@ -143,19 +132,8 @@ class databases:
             resources=Resources(memory_request="8Gi", cpu_request="2")
         )
 
-        manifest = ("apiVersion: v1\n"
-                    "kind: Service\n"
-                    "metadata:\n"
-                    f"   name: {blazegraph_service_name}\n"
-                    "   labels:\n"
-                    f"       cleanup: '{str(configuration)}'\n"
-                    "spec:\n"
-                    "   selector:\n"
-                    f"       app: {blazegraph_container_name}\n"
-                    "   type: ClusterIP\n"
-                    "   ports:\n"
-                    "   - port: 9999\n"
-                    "     targetPort: 8080\n")
+        manifest = create_service_manifest(blazegraph_service_name, str(configuration), blazegraph_container_name, 9999, 8080)
+
         Resource(
             name=blazegraph_service_name,
             action="create",
