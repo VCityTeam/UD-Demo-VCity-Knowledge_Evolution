@@ -191,7 +191,7 @@ class datasets:
         """
         for configuration in configurations:
             manifest = create_volume_manifest(
-                self.environment.compute_dataset_volume_name(configuration),
+                self.environment.compute_logging_volume_name(configuration),
                 "ReadWriteOnce",
                 self.environment.compute_dataset_volume_size(configuration)
             )

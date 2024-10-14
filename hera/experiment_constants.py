@@ -12,5 +12,5 @@ constants = types.SimpleNamespace(
     postgres_password = os.environ.get('POSTGRES_PASSWORD', "password"),
     ubuntu = "ubuntu@sha256:c62f1babc85f8756f395e6aabda682acd7c58a1b0c3bea250713cd0184a93efa",
     python_requests = "xr09/python-requests@sha256:61a5289993bbbfbe4ab3299428855b83c490aeb277895c2bb6f16ab5f0f74abd",
-    quads_querier = "harbor.pagoda.os.univ-lyon1.fr/ud-evolution/quads-querier:v1.0.0"
+    quads_querier = "harbor.pagoda.os.univ-lyon1.fr/ud-evolution/quads-querier:v1.1.0"
 )
