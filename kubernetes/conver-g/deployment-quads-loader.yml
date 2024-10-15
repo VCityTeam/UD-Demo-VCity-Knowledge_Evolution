@@ -15,6 +15,7 @@ spec:
       containers:
       - name: quads-loader
         image: vcity/quads-loader
+        imagePullPolicy: Always
         env:
         - name: SPRING_DATASOURCE_PASSWORD
           valueFrom:

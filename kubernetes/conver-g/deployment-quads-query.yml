@@ -15,6 +15,7 @@ spec:
       containers:
       - name: quads-query
         image: vcity/quads-query
+        imagePullPolicy: Always
         env:
         - name: DATASOURCE_PASSWORD
           valueFrom:

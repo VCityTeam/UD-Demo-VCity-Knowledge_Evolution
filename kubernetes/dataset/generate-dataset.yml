@@ -8,6 +8,7 @@ spec:
       containers:
       - name: bsbm-generator
         image: vcity/bsbm
+        imagePullPolicy: Always
         args: ["generate-n", "200", "10", "10", "5"] # 200 versions, 10 products, step of 10, variability of 5
         volumeMounts:
         - name: converg-dataset-volume

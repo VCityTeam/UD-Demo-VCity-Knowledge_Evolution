@@ -12,6 +12,8 @@ data:
 
     # Extract version number from the file name (assuming the format dataset-{version}.ttl.theoretical.trig)
     version=$(echo "$file" | grep -oP '(?<=-)\d+(?=.ttl\.theoretical\.trig)')
+
+    number_of_versions=$1
     
     ## BSBM tagged data
     find . -type f -name "*.trig" -print0 | while IFS= read -r -d '' file

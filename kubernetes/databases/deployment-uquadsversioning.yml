@@ -15,6 +15,7 @@ spec:
       containers:
       - name: blazegraph
         image: vcity/blazegraph-cors
+        imagePullPolicy: Always
         env:
         - name: BLAZEGRAPH_QUADS
           value: "true"
