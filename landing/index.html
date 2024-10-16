@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <title>Thesis demo</title>
+        <link rel="stylesheet" href="./styles.css" />
+        <link
+            rel="shortcut icon"
+            href="https://liris.cnrs.fr/sites/default/files/favicon.ico"
+            type="image/vnd.microsoft.icon"
+        />
+    </head>
+
+    <body>
+        <div id="info">
+            <p>
+                Jey PUGET GIL -
+                <a href="https://liris.cnrs.fr/">LIRIS</a>
+            </p>
+            <a href="https://projet.liris.cnrs.fr/vcity/">VCity Project</a>
+        </div>
+
+        <div class="container">
+            <div class="content">
+                <div>
+                    <h3 style="background-color: bisque">
+                        <a
+                            href="https://quads-loader.ud-evolution.pagoda.liris.cnrs.fr/swagger-ui/index.html"
+                        >
+                            Quads loaDer</a
+                        >
+                    </h3>
+                    <div>
+                        <h4>QuaDer : import and condense quads datasets</h4>
+                        <p>It stores:</p>
+                        <ul>
+                            <li>all resources or literals in a catalog.</li>
+                            <li>evolving quad datasets in a compressed form using bit vectors to represent the presence of quads across versions.</li>
+                        </ul>
+                    </div>
+                    <picture>
+                        <source
+                            srcset="img/graph-evolution.webp"
+                            type="image/webp"
+                        />
+                        <img src="img/graph-evolution.gif" alt="Graph versioning" />
+                    </picture>
+                </div>
+    
+                <div>
+                    <h3 style="background-color: lightblue">
+                        <a
+                            href="https://quads-query.ud-evolution.pagoda.liris.cnrs.fr/"
+                            style="background-color: lightblue"
+                        >
+                            Quads Query - cross versions
+                        </a>
+                    </h3>
+                    <div>
+                        <h4>Query condensed versioned quads with QuaQue</h4>
+                        <ul>
+                            <li>It supports SPARQL queries without introducing new operators, maintaining interoperability.</li>
+                            <li>QuaQue allows querying across multiple versions simultaneously using the condensed quad representation.</li>
+                            <li>The component uses the condensed representation to improve the execution of join and aggregation queries. </li>
+                        </ul>
+                    </div>
+                    <picture>
+                        <source
+                            srcset="img/quaque.webp"
+                            type="image/webp"
+                        />
+                        <img src="img/quaque.gif" alt="Graph query" />
+                    </picture>
+                </div>
+            </div>
+        </div>
+        <div id="logo-div"><img src="img/logo-liris.png" id="logoLiris"></div>
+    </body>
+</html>
