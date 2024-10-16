@@ -1,0 +1,39 @@
+{
+    "name": "versioned-graph-landing",
+    "version": "1.0.0",
+    "description": "Landing page for the versioned graph viewer",
+    "main": "index.js",
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1",
+      "build": "webpack --config webpack.config.js",
+      "host": "node ./bin/server.js",
+      "debug": "nodemon --watch src/index.js --exec 'npm run build'",
+      "debug2": "nodemon --watch ../../UD-Viz/packages/widget_sparql/src --watch ./src -e js --delay 2500ms --exec npm run build"
+    },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution.git"
+    },
+    "keywords": [
+      "graph",
+      "versioning",
+      "viewer"
+    ],
+    "author": "VCity/LIRIS",
+    "license": "LGPL-2.1-only",
+    "bugs": {
+      "url": "https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution/issues"
+    },
+    "homepage": "https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution#README.md",
+    "dependencies": {
+      "@ud-viz/widget_versioning": "4.5.0",
+      "buffer": "^6.0.3"
+    },
+    "devDependencies": {
+      "css-loader": "^6.8.1",
+      "style-loader": "^3.3.3",
+      "webpack": "^5.89.0",
+      "webpack-cli": "^5.1.4",
+      "express": "4.18.2"
+    }
+  }

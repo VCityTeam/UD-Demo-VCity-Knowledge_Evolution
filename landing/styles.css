@@ -1,10 +1,5 @@
-#info {
-    margin: 1em;
-}
-
 .content {
     margin: 1em;
-    width: 40%;
     display: flex;
     flex-direction: column;
 }
@@ -12,7 +7,6 @@
 .container {
     display: flex;
 }
-
 
 #logoLiris {
     position: fixed;
@@ -24,4 +18,9 @@
     background-color: #ffffff60;
     align-items: center;
     z-index: 5;
+}
+
+textarea {
+    width: 100%;
+    height: 150px;
 }

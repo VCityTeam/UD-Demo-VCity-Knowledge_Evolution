@@ -1,0 +1,62 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-versioning
+spec:
+  selector:
+    matchLabels:
+      app: demo-versioning
+  template:
+    metadata:
+      labels:
+        app: demo-versioning
+    spec:
+      containers:
+      - name: demo-versioning
+        image: harbor.pagoda.os.univ-lyon1.fr/ud-evolution/demo-versioning:v1.3.0
+        imagePullPolicy: Always
+        resources:
+          limits:
+            memory: "1Gi"
+            cpu: "2"
+        ports:
+        - containerPort: 8000
+---
+# https://kubernetes.io/docs/concepts/services-networking/service/
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-versioning
+spec:
+  selector:
+    app: demo-versioning
+  type: ClusterIP
+  ports:
+  - name: demo-versioning
+    protocol: TCP
+    port: 80
+    targetPort: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: demo-versioning-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-pagoda3-prod #Automatisation des certificats let's encrypt
+spec:
+  tls:
+  - hosts:
+      - demo.ud-evolution.pagoda.liris.cnrs.fr
+    secretName: ud-evolution-demo-tls
+  rules:
+  - host: demo.ud-evolution.pagoda.liris.cnrs.fr
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: demo-versioning
+            port:
+              number: 80

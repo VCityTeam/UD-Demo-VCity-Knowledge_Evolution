@@ -63,10 +63,10 @@ metadata:
 spec:
   tls:
   - hosts:
-      - quads-loader.ud-evolution.pagoda.liris.cnrs.fr
+      - quader.ud-evolution.pagoda.liris.cnrs.fr
     secretName: ud-evolution-quader-tls
   rules:
-  - host: quads-loader.ud-evolution.pagoda.liris.cnrs.fr
+  - host: quader.ud-evolution.pagoda.liris.cnrs.fr
     http:
       paths:
       - path: /

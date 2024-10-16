@@ -66,6 +66,14 @@ if [[ "$*" == *--import* ]]; then
     execute_job_and_wait relational-dataset-importer-job
     execute_job_and_wait theoretical-dataset-importer-job
 
+    ## Dataset import (relational: Postgres + ConverG)
+    kubectl apply -f dataset/import-dataset-relational-alt.yml --namespace=ud-evolution
+    ## Dataset import (theoretical: Blazegraph)
+    kubectl apply -f dataset/import-dataset-theoretical-alt.yml --namespace=ud-evolution
+
+    execute_job_and_wait relational-dataset-importer-job-alt
+    execute_job_and_wait theoretical-dataset-importer-job-alt
+
     echo "Dataset has been imported"
 fi
 

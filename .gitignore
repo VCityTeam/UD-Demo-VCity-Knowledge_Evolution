@@ -1,3 +1,6 @@
 **secret*
 venv
 **/__pycache__
+
+**/dist/
+**/node_modules/

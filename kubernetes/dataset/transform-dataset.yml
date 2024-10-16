@@ -15,11 +15,11 @@ spec:
           mountPath: /app/data
         resources:
           requests:
-            memory: "16Gi"
-            cpu: "4"
+            memory: "8Gi"
+            cpu: "2"
           limits:
-            memory: "32Gi"
-            cpu: "4"
+            memory: "16Gi"
+            cpu: "2"
       - name: dataset-transformer-theoretical
         image: vcity/quads-creator
         imagePullPolicy: Always
@@ -29,11 +29,40 @@ spec:
           mountPath: /app/data
         resources:
           requests:
-            memory: "16Gi"
-            cpu: "4"
+            memory: "8Gi"
+            cpu: "2"
           limits:
-            memory: "32Gi"
-            cpu: "4"
+            memory: "16Gi"
+            cpu: "2"
+
+      - name: dataset-transformer-relational-alt
+        image: vcity/quads-creator
+        imagePullPolicy: Always
+        args: ["/app/data/relational-alt", "/app/data", "*", "relational", "BSBM-alt"]
+        volumeMounts:
+        - name: converg-dataset-volume
+          mountPath: /app/data
+        resources:
+          requests:
+            memory: "8Gi"
+            cpu: "2"
+          limits:
+            memory: "16Gi"
+            cpu: "2"
+      - name: dataset-transformer-theoretical-alt
+        image: vcity/quads-creator
+        imagePullPolicy: Always
+        args: ["/app/data/theoretical-alt", "/app/data", "*", "theoretical", "BSBM-alt"]
+        volumeMounts:
+        - name: converg-dataset-volume
+          mountPath: /app/data
+        resources:
+          requests:
+            memory: "8Gi"
+            cpu: "2"
+          limits:
+            memory: "16Gi"
+            cpu: "2"
       volumes:
       - name: converg-dataset-volume
         persistentVolumeClaim:

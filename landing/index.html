@@ -4,7 +4,7 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-        <title>Thesis demo</title>
+        <title>Graph versioning demo</title>
         <link rel="stylesheet" href="./styles.css" />
         <link
             rel="shortcut icon"
@@ -13,13 +13,20 @@
         />
     </head>
 
-    <body>
-        <div id="info">
-            <p>
-                Jey PUGET GIL -
-                <a href="https://liris.cnrs.fr/">LIRIS</a>
-            </p>
-            <a href="https://projet.liris.cnrs.fr/vcity/">VCity Project</a>
+    <body>    
+        <script src="../dist/bundle.js"></script>
+
+        <div class="container">
+            <div class="content">
+                    Jey PUGET GIL -
+                    <a href="https://projet.liris.cnrs.fr/vcity/">VCity Project</a>
+                    <a href="https://liris.cnrs.fr/">LIRIS</a>
+            </div>
+            <div class="content">
+                    GitHub -
+                    <a href="https://github.com/VCityTeam/ConVer-G">ConVer-G components</a>
+                    <a href="https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution">Demonstration</a>
+            </div>
         </div>
 
         <div class="container">
@@ -27,7 +34,7 @@
                 <div>
                     <h3 style="background-color: bisque">
                         <a
-                            href="https://quads-loader.ud-evolution.pagoda.liris.cnrs.fr/swagger-ui/index.html"
+                            href="https://quader.ud-evolution.pagoda.liris.cnrs.fr/swagger-ui/index.html"
                         >
                             Quads loaDer</a
                         >
@@ -42,17 +49,17 @@
                     </div>
                     <picture>
                         <source
-                            srcset="img/graph-evolution.webp"
+                            srcset="assets/img/graph-evolution.webp"
                             type="image/webp"
                         />
-                        <img src="img/graph-evolution.gif" alt="Graph versioning" />
+                        <img src="assets/img/graph-evolution.gif" alt="Graph versioning" />
                     </picture>
                 </div>
     
                 <div>
                     <h3 style="background-color: lightblue">
                         <a
-                            href="https://quads-query.ud-evolution.pagoda.liris.cnrs.fr/"
+                            href="https://quaque.ud-evolution.pagoda.liris.cnrs.fr/"
                             style="background-color: lightblue"
                         >
                             Quads Query - cross versions
@@ -68,14 +75,15 @@
                     </div>
                     <picture>
                         <source
-                            srcset="img/quaque.webp"
+                            srcset="assets/img/quaque.webp"
                             type="image/webp"
                         />
-                        <img src="img/quaque.gif" alt="Graph query" />
+                        <img src="assets/img/quaque.gif" alt="Graph query" />
                     </picture>
                 </div>
             </div>
+            <div class="content" id="ud-viz"></div>
         </div>
-        <div id="logo-div"><img src="img/logo-liris.png" id="logoLiris"></div>
+        <div id="logo-div"><img src="assets/img/logo-liris.png" id="logoLiris"></div>
     </body>
 </html>
