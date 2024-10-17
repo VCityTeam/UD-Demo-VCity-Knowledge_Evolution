@@ -53,26 +53,3 @@ spec:
     protocol: TCP
     port: 8081
     targetPort: 8081
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: quads-query-ingress
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-pagoda3-prod #Automatisation des certificats let's encrypt
-spec:
-  tls:
-  - hosts:
-      - quaque.ud-evolution.pagoda.liris.cnrs.fr
-    secretName: ud-evolution-quaque-tls
-  rules:
-  - host: quaque.ud-evolution.pagoda.liris.cnrs.fr
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: quads-query
-            port:
-              number: 8081

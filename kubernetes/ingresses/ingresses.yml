@@ -1,0 +1,91 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: demo-versioning-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-pagoda3-prod #Automatisation des certificats let's encrypt
+spec:
+  tls:
+  - hosts:
+      - demo.ud-evolution.pagoda.liris.cnrs.fr
+    secretName: ud-evolution-demo-tls
+  rules:
+  - host: demo.ud-evolution.pagoda.liris.cnrs.fr
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: demo-versioning
+            port:
+              number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: quads-loader-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-pagoda3-prod #Automatisation des certificats let's encrypt
+spec:
+  tls:
+  - hosts:
+      - quader.ud-evolution.pagoda.liris.cnrs.fr
+    secretName: ud-evolution-quader-tls
+  rules:
+  - host: quader.ud-evolution.pagoda.liris.cnrs.fr
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: quads-loader
+            port:
+              number: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: quads-query-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-pagoda3-prod #Automatisation des certificats let's encrypt
+spec:
+  tls:
+  - hosts:
+      - quaque.ud-evolution.pagoda.liris.cnrs.fr
+    secretName: ud-evolution-quaque-tls
+  rules:
+  - host: quaque.ud-evolution.pagoda.liris.cnrs.fr
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: quads-query
+            port:
+              number: 8081
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: blazegraph-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-pagoda3-prod #Automatisation des certificats let's encrypt
+spec:
+  tls:
+  - hosts:
+      - blazegraph.ud-evolution.pagoda.liris.cnrs.fr
+    secretName: ud-evolution-blazegraph-tls
+  rules:
+  - host: blazegraph.ud-evolution.pagoda.liris.cnrs.fr
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: blazegraph
+            port:
+              number: 9999

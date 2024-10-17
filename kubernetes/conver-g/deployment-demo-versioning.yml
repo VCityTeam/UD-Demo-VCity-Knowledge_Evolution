@@ -37,26 +37,3 @@ spec:
     protocol: TCP
     port: 80
     targetPort: 8000
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: demo-versioning-ingress
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-pagoda3-prod #Automatisation des certificats let's encrypt
-spec:
-  tls:
-  - hosts:
-      - demo.ud-evolution.pagoda.liris.cnrs.fr
-    secretName: ud-evolution-demo-tls
-  rules:
-  - host: demo.ud-evolution.pagoda.liris.cnrs.fr
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: demo-versioning
-            port:
-              number: 80

@@ -53,26 +53,3 @@ spec:
     protocol: TCP
     port: 8080
     targetPort: 8080
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: quads-loader-ingress
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-pagoda3-prod #Automatisation des certificats let's encrypt
-spec:
-  tls:
-  - hosts:
-      - quader.ud-evolution.pagoda.liris.cnrs.fr
-    secretName: ud-evolution-quader-tls
-  rules:
-  - host: quader.ud-evolution.pagoda.liris.cnrs.fr
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: quads-loader
-            port:
-              number: 8080

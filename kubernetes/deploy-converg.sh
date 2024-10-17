@@ -15,8 +15,8 @@ execute_job_and_wait() {
 
 # Check if there are at least 2 parameters
 if [ "$#" -lt 2 ]; then
-    echo "Usage: $0 <KUBECONFIG_FILE> --deploy --generation --transformation --import --query"
-    echo "Example: $0 ~/.kube/config-pagoda3.yaml --deploy --generation --transformation --import --query"
+    echo "Usage: $0 <KUBECONFIG_FILE> --deploy --ingresses --generation --transformation --import --query"
+    echo "Example: $0 ~/.kube/config-pagoda3.yaml --deploy --ingresses --generation --transformation --import --query"
     exit 1
 fi
 
@@ -33,6 +33,14 @@ if [[ "$*" == *--deploy* ]]; then
     kubectl apply -f dataset/dataset-pvc.yml --namespace=ud-evolution
 
     echo "Blazegraph and ConverG components have been deployed"
+fi
+
+# check if --ingresses flag is part of the command parameters
+if [[ "$*" == *--ingresses* ]]; then
+    # Deploying the ingresses
+    kubectl apply -f ingresses --namespace=ud-evolution
+
+    echo "All ingresses have been deployed"
 fi
 
 # check if --generation flag is part of the command parameters
