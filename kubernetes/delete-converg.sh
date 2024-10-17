@@ -28,7 +28,8 @@ fi
 # check if --generation flag is part of the command parameters
 if [[ "$*" == *--generation* ]]; then
     kubectl delete -f dataset/generate-dataset.yml --namespace=ud-evolution
-    echo "Dataset generation has been deleted"
+    kubectl delete -f dataset/generate-dataset-alt.yml --namespace=ud-evolution
+    echo "Datasets generation has been deleted"
 fi
 
 # check if --transformation flag is part of the command parameters

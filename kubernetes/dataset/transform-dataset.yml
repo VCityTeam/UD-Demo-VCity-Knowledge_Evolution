@@ -9,7 +9,7 @@ spec:
       - name: dataset-transformer-relational
         image: vcity/quads-creator
         imagePullPolicy: Always
-        args: ["/app/data/relational", "/app/data", "*", "relational", "BSBM"]
+        args: ["/app/data/data/relational", "/app/data/data", "*", "relational", "BSBM"]
         volumeMounts:
         - name: converg-dataset-volume
           mountPath: /app/data
@@ -23,7 +23,7 @@ spec:
       - name: dataset-transformer-theoretical
         image: vcity/quads-creator
         imagePullPolicy: Always
-        args: ["/app/data/theoretical", "/app/data", "*", "theoretical", "BSBM"]
+        args: ["/app/data/data/theoretical", "/app/data/data", "*", "theoretical", "BSBM"]
         volumeMounts:
         - name: converg-dataset-volume
           mountPath: /app/data
@@ -38,7 +38,7 @@ spec:
       - name: dataset-transformer-relational-alt
         image: vcity/quads-creator
         imagePullPolicy: Always
-        args: ["/app/data/relational-alt", "/app/data", "*", "relational", "BSBM-alt"]
+        args: ["/app/data/data-alt/relational", "/app/data/data-alt", "*", "relational", "BSBM-alt"]
         volumeMounts:
         - name: converg-dataset-volume
           mountPath: /app/data
@@ -52,7 +52,7 @@ spec:
       - name: dataset-transformer-theoretical-alt
         image: vcity/quads-creator
         imagePullPolicy: Always
-        args: ["/app/data/theoretical-alt", "/app/data", "*", "theoretical", "BSBM-alt"]
+        args: ["/app/data/data-alt/theoretical", "/app/data/data-alt", "*", "theoretical", "BSBM-alt"]
         volumeMounts:
         - name: converg-dataset-volume
           mountPath: /app/data

@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+    name: volume-checker
+spec:
+    containers:
+        - name: volume-checker
+          image: busybox
+          command: ['/bin/sh', '-c', 'sleep 3600']
+          volumeMounts:
+              - name: converg-dataset-volume
+                mountPath: /app
+          resources:
+            requests:
+              memory: "8Gi"
+              cpu: "2"
+            limits:
+              memory: "16Gi"
+              cpu: "2"
+    volumes:
+      - name: converg-dataset-volume
+        persistentVolumeClaim:
+            claimName: converg-dataset-pvc

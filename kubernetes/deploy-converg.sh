@@ -49,7 +49,11 @@ if [[ "$*" == *--generation* ]]; then
     kubectl apply -f dataset/generate-dataset.yml --namespace=ud-evolution
     execute_job_and_wait dataset-generation-job
 
-    echo "Dataset has been generated"
+    ## Dataset alt generation
+    kubectl apply -f dataset/generate-dataset-alt.yml --namespace=ud-evolution
+    execute_job_and_wait dataset-generation-job-alt
+
+    echo "Datasets have been generated"
 fi
 
 # check if --transformation flag is part of the command parameters
@@ -58,7 +62,7 @@ if [[ "$*" == *--transformation* ]]; then
     kubectl apply -f dataset/transform-dataset.yml --namespace=ud-evolution
     execute_job_and_wait dataset-transformer-job
 
-    echo "Dataset has been transformed"
+    echo "Datasets have been transformed"
 fi
 
 # check if --import flag is part of the command parameters

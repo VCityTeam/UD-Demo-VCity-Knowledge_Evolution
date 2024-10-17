@@ -1,15 +1,18 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: dataset-generation-job
+  name: dataset-generation-job-alt
 spec:
   template:
     spec:
       containers:
-      - name: bsbm-generator
+      - name: bsbm-generator-alt
         image: vcity/bsbm
         imagePullPolicy: Always
-        args: ["generate-n", "4", "1", "1", "1"] # 4 versions, 1 products, step of 1, variability of 1
+        args: ["generate-n", "4", "1", "1", "0"] # 4 versions, 1 products, step of 1, variability of 0
+        env:
+        - name: DATA_DESTINATION
+          value: "data-alt"
         volumeMounts:
         - name: converg-dataset-volume
           mountPath: /app/data

@@ -6,7 +6,7 @@ data:
   import-dataset-theoretical.sh: |
     # /bin/bash
 
-    cd /app/data/theoretical || exit
+    cd /app/data/data/theoretical || exit
     echo "-------------------------------------------------------------- [BEGIN IMPORT TRIPLE] --------------------------------------------------------------"
     printf "\n%s$(date +%FT%T) - [Triple Store] Dataset import started."
 
@@ -47,7 +47,7 @@ data:
   import-dataset-relational.sh: |
     # /bin/bash
 
-    cd /app/data/relational || exit
+    cd /app/data/data/relational || exit
     echo "------------------------------------------------------------ [BEGIN IMPORT RELATIONAL] ------------------------------------------------------------"
     printf "\n%s$(date +%FT%T) - [quads-loader] Dataset import started."
 
@@ -81,7 +81,7 @@ data:
   import-dataset-theoretical-alt.sh: |
     # /bin/bash
 
-    cd /app/data/theoretical-alt || exit
+    cd /app/data/data-alt/theoretical || exit
     echo "-------------------------------------------------------------- [BEGIN IMPORT TRIPLE] --------------------------------------------------------------"
     printf "\n%s$(date +%FT%T) - [Triple Store] Dataset import started."
 
@@ -122,7 +122,7 @@ data:
   import-dataset-relational-alt.sh: |
     # /bin/bash
 
-    cd /app/data/relational-alt || exit
+    cd /app/data/data-alt/relational || exit
     echo "------------------------------------------------------------ [BEGIN IMPORT RELATIONAL] ------------------------------------------------------------"
     printf "\n%s$(date +%FT%T) - [quads-loader] Dataset import started."
 
