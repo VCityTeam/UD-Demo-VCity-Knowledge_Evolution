@@ -1,0 +1,58 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus-operated
+spec:
+  serviceAccountName: prometheus
+  serviceMonitorSelector:
+    matchLabels:
+      work: ud-evolution
+  resources:
+    requests:
+      memory: 400Mi
+  evaluationInterval: 15s
+  scrapeInterval: 15s
+  retentionSize: 18GB
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 2000
+    runAsNonRoot: true
+    fsGroup: 2000
+    seccompProfile:
+      type: RuntimeDefault
+  storage:
+    volumeClaimTemplate:
+      spec:
+        resources:
+          requests:
+            storage: 20Gi
+        storageClassName: ceph-rbd
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-operated
+  namespace: ud-evolution
+spec:
+  ports:
+    - name: web
+      port: 9090
+      protocol: TCP
+      targetPort: web
+  selector:
+    app.kubernetes.io/name: prometheus
+  sessionAffinity: None
+  type: ClusterIP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: postgresql-db
+  labels:
+    work: ud-evolution
+spec:
+  selector:
+    matchLabels:
+      app: postgresql-db
+  endpoints:
+  - targetPort: http
