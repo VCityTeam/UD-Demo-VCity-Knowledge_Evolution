@@ -7,7 +7,6 @@ spec:
   selector:
     matchLabels:
       app: postgresql-db
-  replicas: 1
   template:
     metadata:
       labels:
@@ -17,6 +16,7 @@ spec:
         - name: postgresql-db
           image: postgres:17.0
           imagePullPolicy: Always
+          args: ["-c", "log_duration=on"]
           env:
             - name: POSTGRES_PASSWORD
               valueFrom:
@@ -35,6 +35,13 @@ spec:
                 secretKeyRef:
                   name: postgresql-db-secret
                   key: POSTGRES_DB
+          resources:
+            requests:
+              memory: "16Gi"
+              cpu: "8"
+            limits:
+              memory: "64Gi"
+              cpu: "32"
           volumeMounts:
             - name: data
               mountPath: /data

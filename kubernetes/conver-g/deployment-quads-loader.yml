@@ -34,7 +34,10 @@ spec:
               key: DATASOURCE_URL
         resources:
           limits:
-            memory: "32Gi"
+            memory: "64Gi"
+            cpu: "32"
+          requests:
+            memory: "16Gi"
             cpu: "8"
         ports:
         - containerPort: 8080

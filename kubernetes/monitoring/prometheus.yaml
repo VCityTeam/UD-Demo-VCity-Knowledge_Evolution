@@ -6,7 +6,7 @@ spec:
   serviceAccountName: prometheus
   serviceMonitorSelector:
     matchLabels:
-      work: ud-evolution
+      app: ud-evolution
   resources:
     requests:
       memory: 400Mi
@@ -32,27 +32,11 @@ apiVersion: v1
 kind: Service
 metadata:
   name: prometheus-operated
-  namespace: ud-evolution
 spec:
-  ports:
-    - name: web
-      port: 9090
-      protocol: TCP
-      targetPort: web
   selector:
-    app.kubernetes.io/name: prometheus
-  sessionAffinity: None
+    name: prometheus
   type: ClusterIP
----
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: postgresql-db
-  labels:
-    work: ud-evolution
-spec:
-  selector:
-    matchLabels:
-      app: postgresql-db
-  endpoints:
-  - targetPort: http
+  ports:
+  - port: 9090
+    protocol: TCP
+    targetPort: web

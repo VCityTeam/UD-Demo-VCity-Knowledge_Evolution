@@ -1,21 +1,29 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: postgres-prometheus-exporter
+  name: postgres-exporter
 spec:
   selector:
     matchLabels:
-      app: postgres-prometheus-exporter
+      app: postgres-exporter
   template:
     metadata:
       labels:
-        app: postgres-prometheus-exporter
+        app: postgres-exporter
     spec:
       containers:
         - name: postgres-exporter
           image: quay.io/prometheuscommunity/postgres-exporter
           ports:
             - containerPort: 9187
+              name: metrics
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
           env:
             - name: DATA_SOURCE_USER
               valueFrom:
@@ -31,20 +39,34 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: postgresql-db-secret
-                  key: DATASOURCE_URL
-          args:
-            - "--web.listen-address=:9187"
-            - "--web.telemetry-path=/metrics"
-            - "--extend.query-path=/queries.yaml"
+                  key: DATASOURCE_URI
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres-prometheus-exporter
+  name: postgres-exporter-service
+  labels:
+    app: postgres-exporter-service
 spec:
   selector:
-    app: postgres-prometheus-exporter
+    app: postgres-exporter
   ports:
-    - protocol: TCP
+    - name: metrics
+      protocol: TCP
       port: 9187
       targetPort: 9187
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: postgresql-db
+  labels:
+    app: ud-evolution
+spec:
+  selector:
+    matchLabels:
+      app: postgres-exporter-service
+  endpoints:
+  - targetPort: 9187
+    path: /metrics
+    interval: 30s

@@ -9,7 +9,7 @@ spec:
       - name: bsbm-generator-alt
         image: vcity/bsbm
         imagePullPolicy: Always
-        args: ["generate-n", "4", "1", "1", "0"] # 4 versions, 1 products, step of 1, variability of 0
+        args: ["generate-n", "250", "1", "1", "0"] # 250 versions, 1 products, step of 1, variability of 0
         env:
         - name: DATA_DESTINATION
           value: "data-alt"

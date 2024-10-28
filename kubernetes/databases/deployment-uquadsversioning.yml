@@ -1,9 +1,10 @@
 
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: blazegraph
 spec:
+  serviceName: blazegraph
   selector:
     matchLabels:
       app: blazegraph
@@ -20,15 +21,27 @@ spec:
         - name: BLAZEGRAPH_QUADS
           value: "true"
         - name: BLAZEGRAPH_TIMEOUT
-          value: "180000"
+          value: "600000"
         - name: BLAZEGRAPH_MEMORY
           value: "32G"
         resources:
-          limits:
-            memory: "32Gi"
+          requests:
+            memory: "16Gi"
             cpu: "8"
+          limits:
+            memory: "64Gi"
+            cpu: "32"
         ports:
         - containerPort: 8080
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: 
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 50Gi
 ---
 # https://kubernetes.io/docs/concepts/services-networking/service/
 apiVersion: v1

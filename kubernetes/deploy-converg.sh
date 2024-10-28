@@ -29,9 +29,6 @@ if [[ "$*" == *--deploy* ]]; then
     kubectl apply -f databases --namespace=ud-evolution
     kubectl apply -f conver-g --namespace=ud-evolution
 
-    # Handmade workflow
-    kubectl apply -f dataset/dataset-pvc.yml --namespace=ud-evolution
-
     echo "Blazegraph and ConverG components have been deployed"
 fi
 
@@ -45,6 +42,9 @@ fi
 
 # check if --generation flag is part of the command parameters
 if [[ "$*" == *--generation* ]]; then
+    # Handmade workflow
+    kubectl apply -f dataset/dataset-pvc.yml --namespace=ud-evolution
+
     ## Dataset generation
     kubectl apply -f dataset/generate-dataset.yml --namespace=ud-evolution
     execute_job_and_wait dataset-generation-job

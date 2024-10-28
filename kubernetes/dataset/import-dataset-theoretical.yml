@@ -8,7 +8,7 @@ spec:
       containers:
       - name: dataset-importer-theoretical
         image: ubuntu:latest
-        command: ["/bin/bash", "-c", "apt-get update && apt-get install -y curl && /app/scripts/import-dataset-theoretical.sh 4"]
+        command: ["/bin/bash", "-c", "apt-get update && apt-get install -y curl && /app/scripts/import-dataset-theoretical.sh 250"]
         volumeMounts:
         - name: converg-dataset-volume
           mountPath: /app/data

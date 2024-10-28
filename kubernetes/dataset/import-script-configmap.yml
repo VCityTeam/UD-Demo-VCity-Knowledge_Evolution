@@ -10,16 +10,16 @@ data:
     echo "-------------------------------------------------------------- [BEGIN IMPORT TRIPLE] --------------------------------------------------------------"
     printf "\n%s$(date +%FT%T) - [Triple Store] Dataset import started."
 
-    # Extract version number from the file name (assuming the format dataset-{version}.ttl.theoretical.trig)
-    version=$(echo "$file" | grep -oP '(?<=-)\d+(?=.ttl\.theoretical\.trig)')
+    # Extract version number from the file name (assuming the format dataset-{version}.ttl.trig)
+    version=$(echo "$file" | grep -oP '(?<=-)\d+(?=.ttl\.trig)')
 
     number_of_versions=$1
     
     ## BSBM tagged data
     find . -type f -name "*.trig" -print0 | while IFS= read -r -d '' file
     do
-        # Extract version number from the file name (assuming the format dataset-{version}.ttl.theoretical.trig)
-        version=$(echo "$file" | grep -oP '(?<=-)\d+(?=.ttl\.theoretical\.trig)')
+        # Extract version number from the file name (assuming the format dataset-{version}.ttl.trig)
+        version=$(echo "$file" | grep -oP '(?<=-)\d+(?=.ttl\.trig)')
 
         # Check if the version is less than or equal to the specified number_of_versions
         if [ "$version" -le "$number_of_versions" ]; then
@@ -27,9 +27,10 @@ data:
             start=$(date +%s%3N)
             curl -X POST --location 'http://blazegraph:9999/blazegraph/sparql' \
                   --header 'Content-Type:application/x-trig' \
-                  --connect-timeout 60 \
+                  --connect-timeout 180 \
                   --data-binary @"$file"
                   end=$(date +%s%3N)
+
             printf "\n%s$(date +%FT%T) - [Measure] (Import BG $file):$((end-start))ms;"
         fi
     done
@@ -37,7 +38,7 @@ data:
     start=$(date +%s%3N)
     curl -X POST --location 'http://blazegraph:9999/blazegraph/sparql' \
       --header 'Content-Type:application/x-trig' \
-      --connect-timeout 60 \
+      --connect-timeout 180 \
       --data-binary @"theoretical_annotations.trig"
     end=$(date +%s%3N)
     printf "\n%s$(date +%FT%T) - [Measure] (Import BG theoretical_annotations.trig):$((end-start))ms;"
@@ -56,10 +57,10 @@ data:
     ## BSBM tagged data
     ### Import the versions of BSBM
 
-    find . -type f -name "*.ttl.relational.trig" -print0 | while IFS= read -r -d '' file
+    find . -type f -name "*.ttl.trig" -print0 | while IFS= read -r -d '' file
     do
-      # Extract version number from the file name (assuming the format dataset-{version}.ttl.relational.trig)
-      version=$(echo "$file" | grep -oP '(?<=-)\d+(?=.ttl\.relational\.trig)')
+      # Extract version number from the file name (assuming the format dataset-{version}.ttl.trig)
+      version=$(echo "$file" | grep -oP '(?<=-)\d+(?=.ttl\.trig)')
 
       # Check if the version is less than or equal to the specified number_of_versions
       if [ "$version" -le "$number_of_versions" ]; then
@@ -67,7 +68,7 @@ data:
           start=$(date +%s%3N)
           curl --location 'http://quads-loader:8080/import/version' \
             --header 'Content-Type: multipart/form-data' \
-            --connect-timeout 60 \
+            --connect-timeout 180 \
             --form file=@"$file"
           end=$(date +%s%3N)
           printf "\n%s$(date +%FT%T) - [Measure] (Import STS $file):$((end-start))ms;"
@@ -85,16 +86,16 @@ data:
     echo "-------------------------------------------------------------- [BEGIN IMPORT TRIPLE] --------------------------------------------------------------"
     printf "\n%s$(date +%FT%T) - [Triple Store] Dataset import started."
 
-    # Extract version number from the file name (assuming the format dataset-{version}.ttl.theoretical.trig)
-    version=$(echo "$file" | grep -oP '(?<=-)\d+(?=.ttl\.theoretical\.trig)')
+    # Extract version number from the file name (assuming the format dataset-{version}.ttl.trig)
+    version=$(echo "$file" | grep -oP '(?<=-)\d+(?=.ttl\.trig)')
 
     number_of_versions=$1
     
     ## BSBM tagged data
     find . -type f -name "*.trig" -print0 | while IFS= read -r -d '' file
     do
-        # Extract version number from the file name (assuming the format dataset-{version}.ttl.theoretical.trig)
-        version=$(echo "$file" | grep -oP '(?<=-)\d+(?=.ttl\.theoretical\.trig)')
+        # Extract version number from the file name (assuming the format dataset-{version}.ttl.trig)
+        version=$(echo "$file" | grep -oP '(?<=-)\d+(?=.ttl\.trig)')
 
         # Check if the version is less than or equal to the specified number_of_versions
         if [ "$version" -le "$number_of_versions" ]; then
@@ -102,9 +103,10 @@ data:
             start=$(date +%s%3N)
             curl -X POST --location 'http://blazegraph:9999/blazegraph/sparql' \
                   --header 'Content-Type:application/x-trig' \
-                  --connect-timeout 60 \
+                  --connect-timeout 180 \
                   --data-binary @"$file"
                   end=$(date +%s%3N)
+
             printf "\n%s$(date +%FT%T) - [Measure] (Import BG $file):$((end-start))ms;"
         fi
     done
@@ -112,7 +114,7 @@ data:
     start=$(date +%s%3N)
     curl -X POST --location 'http://blazegraph:9999/blazegraph/sparql' \
       --header 'Content-Type:application/x-trig' \
-      --connect-timeout 60 \
+      --connect-timeout 180 \
       --data-binary @"theoretical_annotations.trig"
     end=$(date +%s%3N)
     printf "\n%s$(date +%FT%T) - [Measure] (Import BG theoretical_annotations.trig):$((end-start))ms;"
@@ -131,10 +133,10 @@ data:
     ## BSBM tagged data
     ### Import the versions of BSBM
 
-    find . -type f -name "*.ttl.relational.trig" -print0 | while IFS= read -r -d '' file
+    find . -type f -name "*.ttl.trig" -print0 | while IFS= read -r -d '' file
     do
-      # Extract version number from the file name (assuming the format dataset-{version}.ttl.relational.trig)
-      version=$(echo "$file" | grep -oP '(?<=-)\d+(?=.ttl\.relational\.trig)')
+      # Extract version number from the file name (assuming the format dataset-{version}.ttl.trig)
+      version=$(echo "$file" | grep -oP '(?<=-)\d+(?=.ttl\.trig)')
 
       # Check if the version is less than or equal to the specified number_of_versions
       if [ "$version" -le "$number_of_versions" ]; then
@@ -142,7 +144,7 @@ data:
           start=$(date +%s%3N)
           curl --location 'http://quads-loader:8080/import/version' \
             --header 'Content-Type: multipart/form-data' \
-            --connect-timeout 60 \
+            --connect-timeout 180 \
             --form file=@"$file"
           end=$(date +%s%3N)
           printf "\n%s$(date +%FT%T) - [Measure] (Import STS $file):$((end-start))ms;"
