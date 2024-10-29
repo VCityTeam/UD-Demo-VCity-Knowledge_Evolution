@@ -76,51 +76,6 @@ kubectl port-forward services/ud-quads-importer 8080:8080
 kubectl port-forward services/postgres 5432:5432
 ```
 
-### Hera workflow
-    
-```shell
-# set the environment variables
-export POSTGRES_USER="<username>" 
-export POSTGRES_PASSWORD="<password>"
-
-# print the help
-python experiment.py --help
-
-# execute the experiment
-python experiment.py --versions 1 10 100 1000 --products 5 20 80 350 --steps 1 5 10 50 --variabilities 0 1 10 100
-```
-
-```mermaid
-flowchart TD
-%% Nodes
-    A("<a rel="noopener" href="https://github.com/argoproj-labs/hera" target="_blank">Hera workflow</a>")
-    B("<a rel="noopener" href="https://github.com/argoproj/argo-workflows" target="_blank">Argo workflows Server</a>")
-    C("Argo workflows Controller")
-    D((iterator))
-    subgraph Experiment[<a rel="noopener" href="https://github.com/VCityTeam/ConVer-G" target="_blank">ConVer-G</a>]
-        E(<a rel="noopener" href="https://hub.docker.com/r/vcity/quads-loader" target="_blank">Quads Loader</a>)
-        I(<a rel="noopener" href="https://hub.docker.com/r/vcity/quads-query" target="_blank">Quads Query</a>)
-        
-        F(<a rel="noopener" href="https://github.com/VCityTeam/BSBM" target="_blank">Generate dataset</a>)
-        subgraph Transform[<a rel="noopener" href="https://hub.docker.com/r/vcity/quads-creator" target="_blank">Transform dataset</a>]
-            H1(Relational transformation)
-            H2(Theoretical transformation)
-        end
-        G(<a rel="noopener" href="https://hub.docker.com/r/vcity/blazegraph-cors" target="_blank">Blazegraph</a>)
-
-        J(Query backends)
-    end
-
-%% Edge connections between nodes
-    A --> |submit| B --> C --> D
-    D --> |starts with params| E & G & F & I
-    D --> |launches queries| J
-    F --> H1 & H2 
-    H1 --> |Sends dataset| E
-    H2 --> |Sends dataset| G
-    J --> |Sends query| G & I
-```
-
 ## Related Articles
 
 - BDA 2023: [Graph versioning for evolving urban data](https://hal.science/hal-04257528)
