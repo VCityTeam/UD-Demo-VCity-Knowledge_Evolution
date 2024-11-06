@@ -27,7 +27,9 @@ echo "Using Pagoda $1 KUBECONFIG file"
 if [[ "$*" == *--deploy* ]]; then
     # Deploying the databases (Blazegraph and Postgres) and the Converg components
     kubectl apply -f databases --namespace=ud-evolution
-    kubectl apply -f conver-g --namespace=ud-evolution
+    kubectl apply -f conver-g/deployment-demo-versioning.yml --namespace=ud-evolution
+    kubectl apply -f conver-g/deployment-quads-loader.yml --namespace=ud-evolution
+    kubectl apply -f conver-g/deployment-quads-query.yml --namespace=ud-evolution
 
     echo "Blazegraph and ConverG components have been deployed"
 fi
@@ -87,6 +89,12 @@ if [[ "$*" == *--import* ]]; then
     execute_job_and_wait theoretical-dataset-importer-job-alt
 
     echo "Dataset has been imported"
+fi
+
+# check if --deploy flag is part of the command parameters
+if [[ "$*" == *--deploy* ]]; then
+    kubectl apply -f conver-g/deployment-quads-loader-readonly.yml --namespace=ud-evolution
+    echo "Quads Loader has been deployed in read-only mode"
 fi
 
 # check if --query flag is part of the command parameters
