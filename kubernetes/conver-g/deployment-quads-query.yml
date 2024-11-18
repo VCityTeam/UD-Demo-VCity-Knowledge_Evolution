@@ -38,12 +38,15 @@ spec:
             cpu: "8"
         ports:
         - containerPort: 8081
+        - containerPort: 9400
 ---
 # https://kubernetes.io/docs/concepts/services-networking/service/
 apiVersion: v1
 kind: Service
 metadata:
   name: quads-query
+  labels:
+    app: quads-query
 spec:
   selector:
     app: quads-query
@@ -53,3 +56,22 @@ spec:
     protocol: TCP
     port: 8081
     targetPort: 8081
+  - name: metrics
+    protocol: TCP
+    port: 9400
+    targetPort: 9400
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: quads-query
+  labels:
+    app: ud-evolution
+spec:
+  selector:
+    matchLabels:
+      app: quads-query
+  endpoints:
+  - targetPort: 9400
+    path: /metrics
+    interval: 15s

@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from prometheus_client import start_http_server, Summary
 import time
 import os
+import sys
 
 class blazegraph_exporter:
     """
@@ -17,8 +18,10 @@ class blazegraph_exporter:
         """
         self.base_url = url
         self.metrics_url = f"{self.base_url}/blazegraph/counters"
-        self.server, self.t = start_http_server(port)
+        print(f"Metrics URL: {self.metrics_url}")
+        self.server, self.t = start_http_server(port=port)
         print(f"Server started on port {port}")
+        
         self.metrics = {}
 
         self.init_metrics()
@@ -99,7 +102,13 @@ if __name__ == "__main__":
     # use $BASE_URL environment variable to define the base url
     base_url = os.getenv("BASE_URL", "http://localhost:9999")
     port_exporter = os.getenv("PORT_EXPORTER", 9400)
-    bg_exporter = blazegraph_exporter(base_url, port_exporter)
+
+    try:
+        formatted_port = int(port_exporter)
+        bg_exporter = blazegraph_exporter(base_url, formatted_port)
+    except ValueError:
+        print(f"Invalid port: {port_exporter}")
+        sys.exit(1)
 
     while True:
         time.sleep(5.0)
