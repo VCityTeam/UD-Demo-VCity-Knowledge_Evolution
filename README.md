@@ -1,5 +1,4 @@
 # UD-Demo-VCity-Knowledge_Evolution
-Semantic, spatial and temporal knowledge
 
 ## Context
 This work is part of the larger [Virtual City Project](https://projet.liris.cnrs.fr/vcity/) of LIRIS UMR 5205 CNRS and made possible thanks to a strong collaboration between LIRIS Laboratory and Metropole of Lyon.
