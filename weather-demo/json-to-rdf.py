@@ -57,14 +57,16 @@ def json_to_rdf(json_file_path):
         # Get the named graph
         g = cg.get_context(graph_name)
         
-        # Create subject URI based on fetch_datetime
-        fetch_datetime_str = data.get("fetch_datetime", datetime.now().isoformat())
-        subject = URIRef(WEATHER[f"forecast/{fetch_datetime_str}"])
+        # Create subject URI based on city name
+        city_name = data.get("city", "unknown")
+        # Sanitize city name for URI (replace spaces and commas)
+        city_uri_part = city_name.replace(" ", "_").replace(",", "")
+        subject = URIRef(WEATHER[f"city/{city_uri_part}"])
         
         # Add type
-        g.add((subject, RDF.type, WEATHER.WeatherForecast))
+        g.add((subject, RDF.type, WEATHER.City))
         
-        # Add all properties from JSON
+        # Add all properties from JSON as objects
         
         # fetch_datetime
         if "fetch_datetime" in data:
