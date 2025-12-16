@@ -1,35 +1,95 @@
 import requests
 from datetime import datetime, timedelta
 import os
+import json
 from dotenv import load_dotenv
 
 load_dotenv()
 
 # --- Configuration ---
-VILLE = "Lyon, France"
+CITY = "Lyon, France"
+DATA_DIR = "weather-data"
 
 OWM_API_KEY = os.getenv("OPENWEATHER_API_KEY")
 
-def geocode_city(ville_name, provider="open-meteo", api_key=None):
+def save_forecast_data(target_date, fetch_date, forecast_horizon_days, source, city, lat, lon, temperature, description=None):
     """
-    Géocode une ville pour obtenir sa latitude et longitude.
+    Saves forecast data in an organized folder structure.
     
     Args:
-        ville_name: Nom de la ville à géocoder
-        provider: Service de géocodage à utiliser ("open-meteo" ou "openweathermap")
-        api_key: Clé API (requis pour OpenWeatherMap)
+        target_date: Target forecast date (datetime.date)
+        fetch_date: Fetch date (datetime.date)
+        forecast_horizon_days: Forecast horizon in days (1, 2, 3)
+        source: Forecast source ("open-meteo" or "openweathermap")
+        city: City name
+        lat: Latitude
+        lon: Longitude
+        temperature: Temperature in Celsius
+        description: Optional description (for OWM)
+    """
+    try:
+        # Create folder path: weather-data/YYYY/MM/DD/SOURCE-D#/
+        source_prefix = "OM" if source == "open-meteo" else "OWM"
+        folder_name = f"{source_prefix}-D{forecast_horizon_days}"
+        
+        folder_path = os.path.join(
+            DATA_DIR,
+            str(target_date.year),
+            f"{target_date.month:02d}",
+            f"{target_date.day:02d}",
+            folder_name
+        )
+        
+        # Create folders if they don't exist
+        os.makedirs(folder_path, exist_ok=True)
+        
+        # Create JSON data
+        forecast_data = {
+            "fetch_date": fetch_date.isoformat(),
+            "fetch_datetime": datetime.now().isoformat(),
+            "target_date": target_date.isoformat(),
+            "target_datetime": datetime.combine(target_date, datetime.min.time().replace(hour=12)).isoformat(),
+            "forecast_horizon_days": forecast_horizon_days,
+            "source": source,
+            "city": city,
+            "latitude": lat,
+            "longitude": lon,
+            "temperature_celsius": temperature
+        }
+        
+        if description:
+            forecast_data["description"] = description
+        
+        # Save JSON file
+        file_path = os.path.join(folder_path, "forecast.json")
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(forecast_data, f, indent=2, ensure_ascii=False)
+        
+        print(f"  → Saved: {file_path}")
+        
+    except Exception as e:
+        print(f"Error during save: {e}")
+
+def geocode_city(city_name, provider="open-meteo", api_key=None):
+    """
+    Geocode a city to get its latitude and longitude.
+    
+    Args:
+        city_name: Name of the city to geocode
+        provider: Geocoding service to use ("open-meteo" or "openweathermap")
+        api_key: API key (required for OpenWeatherMap)
     
     Returns:
-        tuple: (latitude, longitude) ou (None, None) si la ville n'est pas trouvée
+        tuple: (latitude, longitude) or (None, None) if city is not found
     """
     try:
         if provider == "open-meteo":
             geo_url = "https://geocoding-api.open-meteo.com/v1/search"
-            geo_params = {"name": ville_name, "count": 1, "language": "fr", "format": "json"}
+            geo_params = {"name": city_name, "count": 1, "language": "en", "format": "json"}
             geo_res = requests.get(geo_url, params=geo_params).json()
             
             if not geo_res.get("results"):
-                print("Ville non trouvée.")
+                print("City not found.")
                 return None, None
             
             lat = geo_res["results"][0]["latitude"]
@@ -37,12 +97,12 @@ def geocode_city(ville_name, provider="open-meteo", api_key=None):
             
         elif provider == "openweathermap":
             if not api_key:
-                print("Clé API requise pour OpenWeatherMap.")
+                print("API key required for OpenWeatherMap.")
                 return None, None
             
             url_geocoding = "http://api.openweathermap.org/geo/1.0/direct"
             params_geocoding = {
-                "q": ville_name,
+                "q": city_name,
                 "appid": api_key
             }
             
@@ -50,38 +110,38 @@ def geocode_city(ville_name, provider="open-meteo", api_key=None):
             data = response.json()
             
             if response.status_code != 200 or not data:
-                print(f"Erreur de géocodage : {data.get('message', 'Ville non trouvée')}")
+                print(f"Geocoding error: {data.get('message', 'City not found')}")
                 return None, None
             
             lat = data[0]["lat"]
             lon = data[0]["lon"]
         
         else:
-            print(f"Provider inconnu: {provider}")
+            print(f"Unknown provider: {provider}")
             return None, None
         
-        print(f"Coordinates of {ville_name}: Latitude: {lat}, Longitude: {lon}")
+        print(f"Coordinates of {city_name}: Latitude: {lat}, Longitude: {lon}")
         return lat, lon
         
     except Exception as e:
-        print(f"Erreur de géocodage : {e}")
+        print(f"Geocoding error: {e}")
         return None, None
 
-def get_forecast_open_meteo(ville_name):
+def get_forecast_open_meteo(city_name):
     """
-    Récupère la météo via Open-Meteo (Pas de clé API requise).
-    Nécessite une étape de géocodage au préalable.
+    Fetches weather via Open-Meteo (No API key required).
+    Requires a geocoding step beforehand.
     """
-    print(f"--- Prévisions Open-Meteo pour {ville_name} ---")
+    print(f"--- Open-Meteo Forecasts for {city_name} ---")
     
     try:
-        # Étape 1 : Géocodage pour obtenir latitude/longitude
-        lat, lon = geocode_city(ville_name, provider="open-meteo")
+        # Step 1: Geocoding to get latitude/longitude
+        lat, lon = geocode_city(city_name, provider="open-meteo")
         
         if lat is None or lon is None:
             return
 
-        # Étape 2 : Récupération Météo
+        # Step 2: Weather Retrieval
         meteo_url = "https://api.open-meteo.com/v1/forecast"
         params = {
             "latitude": lat,
@@ -98,26 +158,44 @@ def get_forecast_open_meteo(ville_name):
         hourly_temps = data["hourly"]["temperature_2m"]
         
         count = 0
+        fetch_date = datetime.now().date()
 
         for i, time_str in enumerate(hourly_times):
             dt = datetime.fromisoformat(time_str)
 
-            if dt.hour == 12 and dt.date() > datetime.now().date():
-                print(f"Date : {dt.strftime('%d/%m/%Y')} à 12h00 | Temp : {hourly_temps[i]}°C")
+            if dt.hour == 12 and dt.date() > fetch_date:
+                temp = hourly_temps[i]
+                target_date = dt.date()
+                forecast_horizon = (target_date - fetch_date).days
+                
+                print(f"Date: {dt.strftime('%m/%d/%Y')} at 12:00 PM | Temp: {temp}°C")
+                
+                # Save data
+                save_forecast_data(
+                    target_date=target_date,
+                    fetch_date=fetch_date,
+                    forecast_horizon_days=forecast_horizon,
+                    source="open-meteo",
+                    city=city_name,
+                    lat=lat,
+                    lon=lon,
+                    temperature=temp
+                )
+                
                 count += 1
                 if count == 3: break
 
     except Exception as e:
-        print(f"Erreur Open-Meteo : {e}")
+        print(f"Open-Meteo Error: {e}")
 
-def get_forecast_openweathermap(ville_name, api_key):
+def get_forecast_openweathermap(city_name, api_key):
     """
-    Récupère la météo via OpenWeatherMap (Clé API requise).
+    Fetches weather via OpenWeatherMap (API key required).
     """
-    print(f"\n--- Prévisions OpenWeatherMap pour {ville_name} ---")
+    print(f"\n--- OpenWeatherMap Forecasts for {city_name} ---")
 
     try:
-        lat, lon = geocode_city(ville_name, provider="openweathermap", api_key=api_key)
+        lat, lon = geocode_city(city_name, provider="openweathermap", api_key=api_key)
 
         if lat is None or lon is None:
             return
@@ -134,7 +212,7 @@ def get_forecast_openweathermap(ville_name, api_key):
         data = response.json()
 
         if response.status_code != 200:
-            print(f"Erreur API : {data.get('message', 'Inconnue')}")
+            print(f"API Error: {data.get('message', 'Unknown')}")
             return
 
         url = "https://api.openweathermap.org/data/2.5/forecast"
@@ -149,27 +227,44 @@ def get_forecast_openweathermap(ville_name, api_key):
         data = response.json()
 
         if response.status_code != 200:
-            print(f"Erreur API : {data.get('message', 'Inconnue')}")
+            print(f"API Error: {data.get('message', 'Unknown')}")
             return
 
         count = 0
+        fetch_date = datetime.now().date()
+        
         for item in data["list"]:
-            dt_txt = item["dt_txt"] # Format: "2023-10-27 12:00:00"
+            dt_txt = item["dt_txt"]
             dt = datetime.strptime(dt_txt, "%Y-%m-%d %H:%M:%S")
             
-            # OpenWeatherMap retourne des données toutes les 3 heures.
-            # On cherche le créneau de 12:00:00
-            if dt.hour == 12 and dt.date() > datetime.now().date():
+            if dt.hour == 12 and dt.date() > fetch_date:
                 temp = item["main"]["temp"]
                 desc = item["weather"][0]["description"]
-                print(f"Date : {dt.strftime('%d/%m/%Y')} à 12h00 | Temp : {temp}°C | Ciel : {desc}")
+                target_date = dt.date()
+                forecast_horizon = (target_date - fetch_date).days
+                
+                print(f"Date: {dt.strftime('%m/%d/%Y')} at 12:00 PM | Temp: {temp}°C | Sky: {desc}")
+                
+                # Save data
+                save_forecast_data(
+                    target_date=target_date,
+                    fetch_date=fetch_date,
+                    forecast_horizon_days=forecast_horizon,
+                    source="openweathermap",
+                    city=city_name,
+                    lat=lat,
+                    lon=lon,
+                    temperature=temp,
+                    description=desc
+                )
+                
                 count += 1
                 if count == 3: break
                 
     except Exception as e:
-        print(f"Erreur OWM : {e}")
+        print(f"OWM Error: {e}")
 
-# --- Exécution ---
+# --- Execution ---
 if __name__ == "__main__":
-    get_forecast_open_meteo(VILLE)
-    get_forecast_openweathermap(VILLE, OWM_API_KEY)
+    get_forecast_open_meteo(CITY)
+    get_forecast_openweathermap(CITY, OWM_API_KEY)
