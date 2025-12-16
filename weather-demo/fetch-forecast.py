@@ -3,6 +3,8 @@ from datetime import datetime, timedelta
 import os
 import json
 from dotenv import load_dotenv
+from meteofrance_api import MeteoFranceClient
+from meteofrance_api.model import Place
 
 load_dotenv()
 
@@ -11,6 +13,77 @@ CITY = "Lyon, France"
 DATA_DIR = "weather-data"
 
 OWM_API_KEY = os.getenv("OPENWEATHER_API_KEY")
+METEOFRANCE_API_KEY = os.getenv("METEOFRANCE_API_KEY")
+
+def save_observation_data(observation_date, source, city, lat, lon, temperature, description=None, additional_data=None):
+    """
+    Saves actual observation data in an organized folder structure.
+    
+    Args:
+        observation_date: Date of the observation (datetime.date)
+        source: Source of the observation ("meteofrance")
+        city: City name
+        lat: Latitude
+        lon: Longitude
+        temperature: Temperature in Celsius
+        description: Optional weather description
+        additional_data: Optional dict with additional observation data
+    """
+    try:
+        # Create folder path: weather-data/YYYY/MM/DD/MF-OBSERVATION/
+        folder_name = "MF-OBSERVATION"
+        
+        folder_path = os.path.join(
+            DATA_DIR,
+            str(observation_date.year),
+            f"{observation_date.month:02d}",
+            f"{observation_date.day:02d}",
+            folder_name
+        )
+        
+        # Create folders if they don't exist
+        os.makedirs(folder_path, exist_ok=True)
+        
+        # Create JSON data
+        observation_data = {
+            "observation_date": observation_date.isoformat(),
+            "observation_datetime": datetime.now().isoformat(),
+            "source": source,
+            "city": city,
+            "latitude": lat,
+            "longitude": lon,
+            "temperature_celsius": temperature
+        }
+        
+        if description:
+            observation_data["description"] = description
+        
+        if additional_data:
+            observation_data.update(additional_data)
+        
+        # Save JSON file
+        file_path = os.path.join(folder_path, "observation.json")
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(observation_data, f, indent=2, ensure_ascii=False)
+        
+        print(f"  → Saved: {file_path}")
+        
+    except Exception as e:
+        print(f"Error during save: {e}")
+
+def get_source_prefix(source):
+    """
+    Returns the prefix for the source.
+    """
+    match source:
+        case "open-meteo":
+            return "OM"
+        case "openweathermap":
+            return "OWM"
+        case "meteofrance":
+            return "MF"
+        case _:
+            raise ValueError(f"Unknown source: {source}") 
 
 def save_forecast_data(target_date, fetch_date, forecast_horizon_days, source, city, lat, lon, temperature, description=None):
     """
@@ -29,7 +102,7 @@ def save_forecast_data(target_date, fetch_date, forecast_horizon_days, source, c
     """
     try:
         # Create folder path: weather-data/YYYY/MM/DD/SOURCE-D#/
-        source_prefix = "OM" if source == "open-meteo" else "OWM"
+        source_prefix = get_source_prefix(source)
         folder_name = f"{source_prefix}-D{forecast_horizon_days}"
         
         folder_path = os.path.join(
@@ -264,7 +337,65 @@ def get_forecast_openweathermap(city_name, api_key):
     except Exception as e:
         print(f"OWM Error: {e}")
 
+def get_observation_meteofrance(city_name):
+    """
+    Fetches current weather observations via Meteo France API.
+    Stores the data in the current day folder.
+    
+    Args:
+        city_name: Name of the city
+    """
+    print(f"\n--- Meteo France Observations for {city_name} ---")
+    
+    try:
+        # Step 1: Geocode to get latitude/longitude
+        lat, lon = geocode_city(city_name, provider="open-meteo")
+        
+        if lat is None or lon is None:
+            return
+        
+        # Step 2: Initialize Meteo France client with access token
+        client = MeteoFranceClient()
+        
+        # Step 3: Get current forecast
+        forecast = client.get_forecast_for_place(place=Place({"lat": lat, "lon": lon}), language='en')
+        current_forecast = forecast.current_forecast
+        
+        if not current_forecast:
+            print("No forecast data available")
+            return
+        # Extract data from observation
+        current_date = datetime.now().date()
+        
+        # Temperature
+        temp = current_forecast.get('T', {}).get('value')
+        if temp is None:
+            print("Temperature data not available in forecast")
+            return
+        
+        # Weather description
+        weather_desc = current_forecast.get('weather', {}).get('desc')
+        
+        print(f"Date: {current_date.strftime('%m/%d/%Y')} | Temp: {temp}°C | Description: {weather_desc or 'N/A'}")
+        
+        # Save forecast data
+        save_forecast_data(
+            target_date=current_date,
+            fetch_date=datetime.now().date(),
+            forecast_horizon_days=0,
+            source="meteofrance",
+            city=city_name,
+            lat=lat,
+            lon=lon,
+            temperature=temp,
+            description=weather_desc
+        )
+        
+    except Exception as e:
+        print(f"Meteo France Error: {e}")
+
 # --- Execution ---
 if __name__ == "__main__":
     get_forecast_open_meteo(CITY)
     get_forecast_openweathermap(CITY, OWM_API_KEY)
+    get_observation_meteofrance(CITY)
