@@ -21,7 +21,7 @@ SCHEMA = Namespace("http://schema.org/")
 WEATHER_GRAPH = Namespace("http://example.org/weather/graphs/")
 
 # Configuration
-DATA_DIR = "weather-demo/weather-data"
+DATA_DIR = "weather-data"
 OUTPUT_EXTENSION = ".trig"
 
 
