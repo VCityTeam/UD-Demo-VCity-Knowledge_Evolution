@@ -125,18 +125,18 @@ def json_to_rdf(json_file_path):
         return None
 
 
-def save_rdf_file(graph, json_file_path):
+def save_daily_rdf_file(graph, day_path, date_str):
     """
-    Save the RDF graph to a TriG file in the same directory as the JSON file.
+    Save the consolidated RDF graph for a day to a TriG file.
     
     Args:
-        graph: ConjunctiveGraph to save
-        json_file_path: Original JSON file path (used to determine output location)
+        graph: ConjunctiveGraph containing all forecasts for the day
+        day_path: Path to the day directory
+        date_str: Date string (YYYY-MM-DD) for naming the file
     """
     try:
-        # Determine output file path
-        json_path = Path(json_file_path)
-        output_path = json_path.parent / (json_path.stem + OUTPUT_EXTENSION)
+        # Determine output file path - save in the day directory
+        output_path = Path(day_path) / f"{date_str}{OUTPUT_EXTENSION}"
         
         # Serialize to TriG format
         graph.serialize(destination=str(output_path), format='trig', encoding='utf-8')
@@ -151,49 +151,84 @@ def save_rdf_file(graph, json_file_path):
 
 def process_all_json_files(data_dir=DATA_DIR):
     """
-    Recursively process all JSON files in the data directory.
+    Process JSON files for the current day only.
+    Creates one .trig file containing all forecasts for today.
     
     Args:
         data_dir: Root directory containing weather data
     """
-    json_files = []
+    # Get current date
+    today = datetime.now()
+    current_year = str(today.year)
+    current_month = str(today.month).zfill(2)
+    current_day = str(today.day).zfill(2)
+    date_str = f"{current_year}-{current_month}-{current_day}"
     
-    # Find all JSON files
-    for root, dirs, files in os.walk(data_dir):
+    # Construct path to today's directory
+    day_path = os.path.join(data_dir, current_year, current_month, current_day)
+    
+    # Check if today's directory exists
+    if not os.path.exists(day_path):
+        print(f"No data directory found for today ({date_str})")
+        return
+    
+    # Find all JSON files in today's directory
+    json_files = []
+    for root, dirs, files in os.walk(day_path):
         for file in files:
             if file.endswith('.json'):
                 json_files.append(os.path.join(root, file))
     
     if not json_files:
-        print(f"No JSON files found in {data_dir}")
+        print(f"No JSON files found for today ({date_str})")
         return
     
-    print(f"Found {len(json_files)} JSON file(s) to process\n")
+    print(f"Found {len(json_files)} JSON file(s) for {date_str}\n")
+    print(f"Processing day: {date_str} ({len(json_files)} forecast(s))")
     
-    processed = 0
-    failed = 0
+    # Create a combined ConjunctiveGraph for all forecasts of this day
+    combined_graph = ConjunctiveGraph()
     
+    # Bind namespaces for prettier output
+    combined_graph.bind("weather", WEATHER)
+    combined_graph.bind("geo", GEO)
+    combined_graph.bind("xsd", XSD)
+    combined_graph.bind("schema", SCHEMA)
+    
+    total_processed = 0
+    total_failed = 0
+    
+    # Process each JSON file for today
     for json_file in json_files:
-        print(f"Processing: {json_file}")
+        print(f"  - {json_file}")
         
         # Transform JSON to RDF
         rdf_graph = json_to_rdf(json_file)
         
         if rdf_graph is not None:
-            # Save RDF file
-            output_file = save_rdf_file(rdf_graph, json_file)
-            if output_file:
-                processed += 1
-            else:
-                failed += 1
+            # Merge this graph into the combined graph
+            for quad in rdf_graph.quads():
+                combined_graph.add(quad)
+            total_processed += 1
         else:
-            failed += 1
+            total_failed += 1
     
-    print(f"\n{'='*60}")
+    # Save the combined graph for today
+    if total_processed > 0:
+        output_file = save_daily_rdf_file(combined_graph, day_path, date_str)
+        success = output_file is not None
+    else:
+        success = False
+    
+    print()
+    print(f"{'='*60}")
     print(f"Transformation complete!")
-    print(f"  Processed: {processed} file(s)")
-    if failed > 0:
-        print(f"  Failed: {failed} file(s)")
+    print(f"  Date: {date_str}")
+    print(f"  Forecasts processed: {total_processed}")
+    if total_failed > 0:
+        print(f"  Failed forecasts: {total_failed}")
+    if not success:
+        print(f"  ERROR: Failed to save output file")
     print(f"{'='*60}")
 
 
