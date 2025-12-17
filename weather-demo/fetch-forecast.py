@@ -292,7 +292,7 @@ def get_forecast_openweathermap(city_name, api_key):
         params = {
             "lat": lat,
             "lon": lon,
-            "APPID": api_key,
+            "appid": api_key,
             "units": "metric"
         }
         

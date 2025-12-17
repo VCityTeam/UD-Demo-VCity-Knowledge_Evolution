@@ -10,8 +10,8 @@ Each forecast is stored in a named graph based on the source and forecast horizo
 import os
 import json
 from pathlib import Path
-from rdflib import Graph, Namespace, Literal, URIRef, ConjunctiveGraph
-from rdflib.namespace import RDF, XSD, GEO
+from rdflib import Graph, Namespace, Literal, URIRef, Dataset
+from rdflib.namespace import RDF, XSD, WGS
 from datetime import datetime
 
 
@@ -33,21 +33,21 @@ def json_to_rdf(json_file_path):
         json_file_path: Path to the JSON file
         
     Returns:
-        ConjunctiveGraph: RDF graph with named graphs (quads)
+        Dataset: RDF graph with named graphs (quads)
     """
     try:
         # Read JSON file
         with open(json_file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
         
-        # Create a ConjunctiveGraph (supports named graphs)
-        cg = ConjunctiveGraph()
+        # Create a Dataset (supports named graphs)
+        ds = Dataset()
         
         # Bind namespaces for prettier output
-        cg.bind("weather", WEATHER)
-        cg.bind("geo", GEO)
-        cg.bind("xsd", XSD)
-        cg.bind("schema", SCHEMA)
+        ds.bind("weather", WEATHER)
+        ds.bind("xsd", XSD)
+        ds.bind("schema", SCHEMA)
+        ds.bind("wgs", WGS)
         
         # Determine named graph URI
         source = data.get("source", "unknown")
@@ -55,7 +55,7 @@ def json_to_rdf(json_file_path):
         graph_name = URIRef(WEATHER_GRAPH[f"{source}-D{forecast_horizon}"])
         
         # Get the named graph
-        g = cg.get_context(graph_name)
+        g = ds.graph(graph_name) # Use .graph() for Dataset
         
         # Create subject URI based on city name
         city_name = data.get("city", "unknown")
@@ -93,12 +93,12 @@ def json_to_rdf(json_file_path):
         
         # latitude (using standard geo vocabulary)
         if "latitude" in data:
-            g.add((subject, GEO.lat, 
+            g.add((subject, WGS.lat, 
                    Literal(data["latitude"], datatype=XSD.decimal)))
         
         # longitude (using standard geo vocabulary)
         if "longitude" in data:
-            g.add((subject, GEO.long, 
+            g.add((subject, WGS.long, 
                    Literal(data["longitude"], datatype=XSD.decimal)))
         
         # temperature_celsius
@@ -120,7 +120,7 @@ def json_to_rdf(json_file_path):
             g.add((subject, WEATHER.targetDate, 
                    Literal(data["target_date"], datatype=XSD.date)))
         
-        return cg
+        return ds
         
     except Exception as e:
         print(f"Error processing {json_file_path}: {e}")
@@ -132,7 +132,7 @@ def save_daily_rdf_file(graph, day_path, date_str):
     Save the consolidated RDF graph for a day to a TriG file.
     
     Args:
-        graph: ConjunctiveGraph containing all forecasts for the day
+        graph: Dataset containing all forecasts for the day
         day_path: Path to the day directory
         date_str: Date string (YYYY-MM-DD) for naming the file
     """
@@ -188,12 +188,11 @@ def process_all_json_files(data_dir=DATA_DIR):
     print(f"Found {len(json_files)} JSON file(s) for {date_str}\n")
     print(f"Processing day: {date_str} ({len(json_files)} forecast(s))")
     
-    # Create a combined ConjunctiveGraph for all forecasts of this day
-    combined_graph = ConjunctiveGraph()
+    # Create a combined Dataset for all forecasts of this day
+    combined_graph = Dataset()
     
     # Bind namespaces for prettier output
     combined_graph.bind("weather", WEATHER)
-    combined_graph.bind("geo", GEO)
     combined_graph.bind("xsd", XSD)
     combined_graph.bind("schema", SCHEMA)
     
@@ -209,8 +208,9 @@ def process_all_json_files(data_dir=DATA_DIR):
         
         if rdf_graph is not None:
             # Merge this graph into the combined graph
-            for quad in rdf_graph.quads():
-                combined_graph.add(quad)
+            # Iterate over quads (s, p, o, g) and add to the combined Dataset
+            for s, p, o, g in rdf_graph.quads():
+                combined_graph.add((s, p, o, g))
             total_processed += 1
         else:
             total_failed += 1
