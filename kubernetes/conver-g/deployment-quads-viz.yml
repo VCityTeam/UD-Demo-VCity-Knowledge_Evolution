@@ -1,0 +1,44 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quads-viz
+spec:
+  selector:
+    matchLabels:
+      app: quads-viz
+  template:
+    metadata:
+      labels:
+        app: quads-viz
+    spec:
+      containers:
+      - name: quads-viz
+        image: harbor.pagoda.liris.cnrs.fr/ud-evolution/rdf-vers:v1.0.0
+        imagePullPolicy: Always
+        env:
+        - name: VITE_QUERY_ENDPOINT
+          value: "https://quaque.ud-evolution.pagoda.liris.cnrs.fr/rdf/query"
+        - name: VITE_LOADER_ENDPOINT
+          value: "https://quader.ud-evolution.pagoda.liris.cnrs.fr/import/metadata"
+        resources:
+          limits:
+            memory: "2Gi"
+            cpu: "2"
+        ports:
+        - containerPort: 80
+---
+# https://kubernetes.io/docs/concepts/services-networking/service/
+apiVersion: v1
+kind: Service
+metadata:
+  name: quads-viz
+spec:
+  selector:
+    app: quads-viz
+  type: ClusterIP
+  ports:
+  - name: quads-viz
+    protocol: TCP
+    port: 3000
+    targetPort: 80
