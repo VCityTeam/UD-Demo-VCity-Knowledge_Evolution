@@ -15,8 +15,8 @@ execute_job_and_wait() {
 
 # Check if there are at least 2 parameters
 if [ "$#" -lt 2 ]; then
-    echo "Usage: $0 <KUBECONFIG_FILE> --deploy --ingresses --generation --transformation --import --query"
-    echo "Example: $0 ~/.kube/config-pagoda3.yaml --deploy --ingresses --generation --transformation --import --query"
+    echo "Usage: $0 <KUBECONFIG_FILE> --deploy --ingresses [--generation --transformation --import | --cron-dataset] --query"
+    echo "Example: $0 ~/.kube/config-pagoda3.yaml --deploy --ingresses [--generation --transformation --import | --cron-dataset] --query"
     exit 1
 fi
 
@@ -28,6 +28,7 @@ if [[ "$*" == *--deploy* ]]; then
     # Deploying the databases (Blazegraph and Postgres) and the Converg components
     kubectl apply -f databases --namespace=ud-evolution
     kubectl apply -f conver-g/deployment-demo-versioning.yml --namespace=ud-evolution
+    kubectl apply -f conver-g/deployment-quads-viz.yml --namespace=ud-evolution
     kubectl apply -f conver-g/deployment-quads-loader.yml --namespace=ud-evolution
     kubectl apply -f conver-g/deployment-quads-query.yml --namespace=ud-evolution
 
@@ -56,6 +57,18 @@ if [[ "$*" == *--generation* ]]; then
     execute_job_and_wait dataset-generation-job-alt
 
     echo "Datasets have been generated"
+fi
+
+# check if --cron-dataset flag is part of the command parameters
+if [[ "$*" == *--cron-dataset* ]]; then
+    # Handmade workflow
+    kubectl apply -f dataset/dataset-pvc.yml --namespace=ud-evolution
+
+    kubectl apply -f dataset/weather-forecast-secret.yml --namespace=ud-evolution
+    kubectl apply -f dataset/weather-forecast-config.yml --namespace=ud-evolution
+    kubectl apply -f dataset/weather-forecast-cronjob.yml --namespace=ud-evolution
+
+    echo "Weather forecast dataset has been deployed"
 fi
 
 # check if --transformation flag is part of the command parameters
@@ -92,7 +105,7 @@ if [[ "$*" == *--import* ]]; then
 fi
 
 # check if --deploy flag is part of the command parameters
-if [[ "$*" == *--deploy* ]]; then
+if [[ "$*" == *--deploy-readonly* ]]; then
     kubectl apply -f conver-g/deployment-quads-loader-readonly.yml --namespace=ud-evolution
     echo "Quads Loader has been deployed in read-only mode"
 fi

@@ -1,5 +1,5 @@
 {
-    "url": "http://localhost:8081/rdf/query",
+    "url": "https://quaque.ud-evolution.pagoda.liris.cnrs.fr/rdf/query",
     "options": {
         "query": "body"
     }

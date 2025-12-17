@@ -4,3 +4,5 @@ venv
 
 **/dist/
 **/node_modules/
+
+**/.env

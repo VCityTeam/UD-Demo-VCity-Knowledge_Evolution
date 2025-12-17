@@ -73,7 +73,7 @@ spec:
     spec:
       containers:
         - name: blazegraph-exporter
-          image: harbor.pagoda.os.univ-lyon1.fr/ud-evolution/blazegraph-exporter:v1.0.2
+          image: harbor.pagoda.liris.cnrs.fr/ud-evolution/blazegraph-exporter:v1.0.2
           ports:
             - containerPort: 9400
               name: metrics

@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: weather-forecast-daily
+spec:
+  schedule: "0 12 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: weather-forecast
+            image: harbor.pagoda.liris.cnrs.fr/ud-evolution/weather-forecast:v1.0.1
+            envFrom:
+            - secretRef:
+                name: weather-forecast-secret
+            - configMapRef:
+                name: weather-forecast-config
+            volumeMounts:
+            - name: dataset-storage
+              mountPath: /app/weather-data
+          volumes:
+          - name: dataset-storage
+            persistentVolumeClaim:
+              claimName: converg-dataset-pvc
+          restartPolicy: OnFailure

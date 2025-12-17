@@ -2,8 +2,8 @@
 
 # Check if there are at least 2 parameters
 if [ "$#" -lt 2 ]; then
-    echo "Usage: $0 <KUBECONFIG_FILE> --deploy --ingresses --generation --transformation --import --query"
-    echo "Example: $0 ~/.kube/config-pagoda3.yaml --deploy --ingresses --generation --transformation --import --query"
+    echo "Usage: $0 <KUBECONFIG_FILE> --deploy --ingresses [--generation --transformation --import | --cron-dataset] --query"
+    echo "Example: $0 ~/.kube/config-pagoda3.yaml --deploy --ingresses [--generation --transformation --import | --cron-dataset] --query"
     exit 1
 fi
 
@@ -30,6 +30,18 @@ if [[ "$*" == *--generation* ]]; then
     kubectl delete -f dataset/generate-dataset.yml --namespace=ud-evolution
     kubectl delete -f dataset/generate-dataset-alt.yml --namespace=ud-evolution
     echo "Datasets generation has been deleted"
+fi
+
+# check if --cron-dataset flag is part of the command parameters
+if [[ "$*" == *--cron-dataset* ]]; then
+    # Handmade workflow
+    kubectl delete -f dataset/dataset-pvc.yml --namespace=ud-evolution
+
+    kubectl delete -f dataset/weather-forecast-secret.yml --namespace=ud-evolution
+    kubectl delete -f dataset/weather-forecast-config.yml --namespace=ud-evolution
+    kubectl delete -f dataset/weather-forecast-cronjob.yml --namespace=ud-evolution
+
+    echo "Weather forecast dataset has been deleted"
 fi
 
 # check if --transformation flag is part of the command parameters
