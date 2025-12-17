@@ -1,89 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-        <title>Graph versioning demo</title>
-        <link rel="stylesheet" href="./styles.css" />
-        <link
-            rel="shortcut icon"
-            href="https://liris.cnrs.fr/sites/default/files/favicon.ico"
-            type="image/vnd.microsoft.icon"
-        />
-    </head>
 
-    <body>    
-        <script src="../dist/bundle.js"></script>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Graph versioning demo</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="shortcut icon" href="https://liris.cnrs.fr/sites/default/files/favicon.ico"
+        type="image/vnd.microsoft.icon" />
+</head>
 
-        <div class="container">
-            <div class="content">
-                    Jey PUGET GIL -
-                    <a href="https://projet.liris.cnrs.fr/vcity/">VCity Project</a>
-                    <a href="https://liris.cnrs.fr/">LIRIS</a>
-            </div>
-            <div class="content">
-                    GitHub -
-                    <a href="https://github.com/VCityTeam/ConVer-G">ConVer-G components</a>
-                    <a href="https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution">Demonstration</a>
-            </div>
+<body>
+    <script src="../dist/bundle.js"></script>
+
+    <div class="container">
+        <div class="content">
+            Jey PUGET GIL -
+            <a href="https://projet.liris.cnrs.fr/vcity/">VCity Project</a>
+            <a href="https://liris.cnrs.fr/">LIRIS</a>
         </div>
+        <div class="content">
+            GitHub -
+            <a href="https://github.com/VCityTeam/ConVer-G">ConVer-G components</a>
+            <a href="https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution">Demonstration</a>
+        </div>
+    </div>
 
-        <div class="container">
-            <div class="content">
+    <div class="container">
+        <div class="content">
+            <div>
+                <h3 style="background-color: lightpink">
+                    <a href="https://quaviz.ud-evolution.pagoda.liris.cnrs.fr/" style="background-color: lightpink">
+                        Quads Viz - cross versions
+                    </a>
+                </h3>
                 <div>
-                    <h3 style="background-color: bisque">
-                        <a
-                            href="https://quader.ud-evolution.pagoda.liris.cnrs.fr/swagger-ui/index.html"
-                        >
-                            Quads loaDer</a
-                        >
-                    </h3>
-                    <div>
-                        <h4>QuaDer : import and condense quads datasets</h4>
-                        <p>It stores:</p>
-                        <ul>
-                            <li>all resources or literals in a catalog.</li>
-                            <li>evolving quad datasets in a compressed form using bit vectors to represent the presence of quads across versions.</li>
-                        </ul>
-                    </div>
-                    <picture>
-                        <source
-                            srcset="assets/img/graph-evolution.webp"
-                            type="image/webp"
-                        />
-                        <img src="assets/img/graph-evolution.gif" alt="Graph versioning" />
-                    </picture>
+                    <h4>Visualize versioned quads with QuaViz</h4>
+                    <ul>
+                        <li>Navigate through quads versions with the metagraph.
+                        </li>
+                        <li>Understand the diffs between two versioned graph.</li>
+                    </ul>
                 </div>
-    
+                <picture>
+                    <source srcset="assets/img/graph-evolution.webp" type="image/webp" />
+                    <img src="assets/img/graph-evolution.gif" alt="Graph versioning" />
+                </picture>
+            </div>
+
+            <div>
+                <h3 style="background-color: bisque">
+                    <a href="https://quader.ud-evolution.pagoda.liris.cnrs.fr/swagger-ui/index.html">
+                        Quads loaDer</a>
+                </h3>
                 <div>
-                    <h3 style="background-color: lightblue">
-                        <a
-                            href="https://quaque.ud-evolution.pagoda.liris.cnrs.fr/"
-                            style="background-color: lightblue"
-                        >
-                            Quads Query - cross versions
-                        </a>
-                    </h3>
-                    <div>
-                        <h4>Query condensed versioned quads with QuaQue</h4>
-                        <ul>
-                            <li>It supports SPARQL queries without introducing new operators, maintaining interoperability.</li>
-                            <li>QuaQue allows querying across multiple versions simultaneously using the condensed quad representation.</li>
-                            <li>The component uses the condensed representation to improve the execution of join and aggregation queries. </li>
-                        </ul>
-                    </div>
-                    <picture>
-                        <source
-                            srcset="assets/img/quaque.webp"
-                            type="image/webp"
-                        />
-                        <img src="assets/img/quaque.gif" alt="Graph query" />
-                    </picture>
+                    <h4>QuaDer : import and condense quads datasets</h4>
+                    <p>It stores:</p>
+                    <ul>
+                        <li>all resources or literals in a catalog.</li>
+                        <li>evolving quad datasets in a compressed form using bit vectors to represent the presence of
+                            quads across versions.</li>
+                    </ul>
                 </div>
             </div>
-            <div class="content" id="ud-viz"></div>
+
+            <div>
+                <h3 style="background-color: lightblue">
+                    <a href="https://quaque.ud-evolution.pagoda.liris.cnrs.fr/" style="background-color: lightblue">
+                        Quads Query - cross versions
+                    </a>
+                </h3>
+                <div>
+                    <h4>Query condensed versioned quads with QuaQue</h4>
+                    <ul>
+                        <li>It supports SPARQL queries without introducing new operators, maintaining interoperability.
+                        </li>
+                        <li>QuaQue allows querying across multiple versions simultaneously using the condensed quad
+                            representation.</li>
+                        <li>The component uses the condensed representation to improve the execution of join and
+                            aggregation queries. </li>
+                    </ul>
+                </div>
+                <picture>
+                    <source srcset="assets/img/quaque.webp" type="image/webp" />
+                    <img src="assets/img/quaque.gif" alt="Graph query" />
+                </picture>
+            </div>
         </div>
-        <div id="logo-div"><img src="assets/img/logo-liris.png" id="logoLiris"></div>
-    </body>
+        <div class="content" id="ud-viz"></div>
+    </div>
+    <div id="logo-div"><img src="assets/img/logo-liris.png" id="logoLiris"></div>
+</body>
+
 </html>
