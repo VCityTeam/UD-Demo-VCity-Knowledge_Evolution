@@ -16,7 +16,7 @@ def upload_trig_file():
     month = now.strftime("%m")
     day = now.strftime("%d")
     
-    file_path = f"weather-demo/weather-data/{year}/{month}/{day}/{year}-{month}-{day}.trig"
+    file_path = f"weather-data/{year}/{month}/{day}/{year}-{month}-{day}.trig"
     
     if not os.path.exists(file_path):
         print(f"Error: File not found: {file_path}", file=sys.stderr)
