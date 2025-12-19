@@ -66,8 +66,6 @@ def json_to_rdf(json_file_path):
         # Add type
         g.add((subject, RDF.type, WEATHER.City))
         
-        # Add all properties from JSON as objects
-        
         # fetch_datetime
         if "fetch_datetime" in data:
             g.add((subject, WEATHER.fetchDateTime, 
@@ -83,13 +81,15 @@ def json_to_rdf(json_file_path):
             g.add((subject, WEATHER.forecastHorizonDays, 
                    Literal(data["forecast_horizon_days"], datatype=XSD.integer)))
         
-        # source
+        # source - create URI for the data source
         if "source" in data:
-            g.add((subject, WEATHER.source, Literal(data["source"])))
+            source_uri = URIRef(WEATHER[f"source/{data['source']}"])
+            g.add((source_uri, RDF.type, WEATHER.DataSource))
+            g.add((subject, WEATHER.hasSource, source_uri))
         
-        # city
+        # city name as literal (for display purposes)
         if "city" in data:
-            g.add((subject, WEATHER.city, Literal(data["city"])))
+            g.add((subject, SCHEMA.name, Literal(data["city"], datatype=XSD.string)))
         
         # latitude (using standard geo vocabulary)
         if "latitude" in data:
@@ -108,7 +108,7 @@ def json_to_rdf(json_file_path):
         
         # description (optional field)
         if "description" in data:
-            g.add((subject, WEATHER.description, Literal(data["description"])))
+            g.add((subject, WEATHER.description, Literal(data["description"], datatype=XSD.string)))
         
         # fetch_date (optional)
         if "fetch_date" in data:
