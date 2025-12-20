@@ -3,14 +3,14 @@ kind: CronJob
 metadata:
   name: weather-forecast-daily
 spec:
-  schedule: "0 12 * * *"
+  schedule: "30 12 * * *"
   jobTemplate:
     spec:
       template:
         spec:
           containers:
           - name: weather-forecast
-            image: harbor.pagoda.liris.cnrs.fr/ud-evolution/weather-forecast:v1.0.1
+            image: harbor.pagoda.liris.cnrs.fr/ud-evolution/weather-forecast:v1.2.0
             envFrom:
             - secretRef:
                 name: weather-forecast-secret

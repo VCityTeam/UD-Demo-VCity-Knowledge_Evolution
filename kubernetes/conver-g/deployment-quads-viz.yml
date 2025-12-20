@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: quads-viz
-        image: harbor.pagoda.liris.cnrs.fr/ud-evolution/rdf-vers:v1.1.0
+        image: vcity/quads-vizualizer:qv-v1.2.0
         imagePullPolicy: Always
         env:
         - name: VITE_QUERY_ENDPOINT

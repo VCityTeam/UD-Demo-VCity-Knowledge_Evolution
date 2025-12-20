@@ -3,4 +3,4 @@ kind: ConfigMap
 metadata:
   name: weather-forecast-config
 data:
-  QUADS_LOADER_URL: "http://quads-loader:8080/import/version"
+  QUADS_LOADER_URL: "http://quads-loader:8080"

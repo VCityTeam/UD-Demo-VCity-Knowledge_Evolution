@@ -1,75 +1,33 @@
-import requests
-from datetime import datetime, timedelta
-import os
+#!/usr/bin/env python3
+"""
+Weather Forecast Fetcher.
+
+This script fetches weather forecasts from multiple sources:
+- Open-Meteo: Free weather API with 3-day forecasts
+- OpenWeatherMap: Weather API with 3-day forecasts (requires API key)
+- Meteo France: Current observations (D0 forecasts)
+
+Data is saved in an organized folder structure: weather-data/YYYY/MM/DD/SOURCE-D#/
+"""
+
 import json
+import os
+from datetime import datetime
+
+import requests
 from dotenv import load_dotenv
 from meteofrance_api import MeteoFranceClient
 from meteofrance_api.model import Place
 
 load_dotenv()
 
-# --- Configuration ---
+# Configuration
 CITY = "Lyon, France"
 DATA_DIR = "weather-data"
 
 OWM_API_KEY = os.getenv("OPENWEATHER_API_KEY")
 METEOFRANCE_API_KEY = os.getenv("METEOFRANCE_API_KEY")
 
-def save_observation_data(observation_date, source, city, lat, lon, temperature, description=None, additional_data=None):
-    """
-    Saves actual observation data in an organized folder structure.
-    
-    Args:
-        observation_date: Date of the observation (datetime.date)
-        source: Source of the observation ("meteofrance")
-        city: City name
-        lat: Latitude
-        lon: Longitude
-        temperature: Temperature in Celsius
-        description: Optional weather description
-        additional_data: Optional dict with additional observation data
-    """
-    try:
-        # Create folder path: weather-data/YYYY/MM/DD/MF-OBSERVATION/
-        folder_name = "MF-OBSERVATION"
-        
-        folder_path = os.path.join(
-            DATA_DIR,
-            str(observation_date.year),
-            f"{observation_date.month:02d}",
-            f"{observation_date.day:02d}",
-            folder_name
-        )
-        
-        # Create folders if they don't exist
-        os.makedirs(folder_path, exist_ok=True)
-        
-        # Create JSON data
-        observation_data = {
-            "observation_date": observation_date.isoformat(),
-            "observation_datetime": datetime.now().isoformat(),
-            "source": source,
-            "city": city,
-            "latitude": lat,
-            "longitude": lon,
-            "temperature_celsius": temperature
-        }
-        
-        if description:
-            observation_data["description"] = description
-        
-        if additional_data:
-            observation_data.update(additional_data)
-        
-        # Save JSON file
-        file_path = os.path.join(folder_path, "observation.json")
-        with open(file_path, 'w', encoding='utf-8') as f:
-            json.dump(observation_data, f, indent=2, ensure_ascii=False)
-        
-        print(f"  → Saved: {file_path}")
-        
-    except Exception as e:
-        print(f"Error during save: {e}")
 
 def get_source_prefix(source):
     """

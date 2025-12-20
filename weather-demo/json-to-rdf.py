@@ -11,7 +11,7 @@ import os
 import json
 from pathlib import Path
 from rdflib import Graph, Namespace, Literal, URIRef, Dataset
-from rdflib.namespace import RDF, XSD, WGS
+from rdflib.namespace import RDF, XSD, WGS, PROV
 from datetime import datetime
 
 
@@ -33,106 +33,122 @@ def json_to_rdf(json_file_path):
         json_file_path: Path to the JSON file
         
     Returns:
-        Dataset: RDF graph with named graphs (quads)
+        tuple: (weather_dataset, metadata_graph) - Weather dataset and metadata graph
     """
     try:
         # Read JSON file
         with open(json_file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
         
-        # Create a Dataset (supports named graphs)
-        ds = Dataset()
+        # Create a Dataset for weather data and a Graph for metadata
+        weather_ds = Dataset()
+        metadata_graph = Graph()
         
         # Bind namespaces for prettier output
-        ds.bind("weather", WEATHER)
-        ds.bind("xsd", XSD)
-        ds.bind("schema", SCHEMA)
-        ds.bind("wgs", WGS)
+        for ds in [weather_ds, metadata_graph]:
+            ds.bind("weather", WEATHER)
+            ds.bind("xsd", XSD)
+            ds.bind("schema", SCHEMA)
+            ds.bind("wgs", WGS)
+            ds.bind("prov", PROV)
         
         # Determine named graph URI
         source = data.get("source", "unknown")
         forecast_horizon = data.get("forecast_horizon_days", 0)
         graph_name = URIRef(WEATHER_GRAPH[f"{source}-D{forecast_horizon}"])
         
-        # Get the named graph
-        g = ds.graph(graph_name) # Use .graph() for Dataset
+        # Get the named graph for weather data
+        g = weather_ds.graph(graph_name)
         
-        # Create subject URI based on city name
+        # Create city URI as an object
         city_name = data.get("city", "unknown")
         # Sanitize city name for URI (replace spaces and commas)
         city_uri_part = city_name.replace(" ", "_").replace(",", "")
-        subject = URIRef(WEATHER[f"city/{city_uri_part}"])
+        city_uri = URIRef(WEATHER[f"city/{city_uri_part}"])
         
-        # Add type
-        g.add((subject, RDF.type, WEATHER.City))
-        
-        # fetch_datetime
-        if "fetch_datetime" in data:
-            g.add((subject, WEATHER.fetchDateTime, 
-                   Literal(data["fetch_datetime"], datatype=XSD.dateTime)))
-        
-        # target_datetime
-        if "target_datetime" in data:
-            g.add((subject, WEATHER.targetDateTime, 
-                   Literal(data["target_datetime"], datatype=XSD.dateTime)))
-        
-        # forecast_horizon_days
-        if "forecast_horizon_days" in data:
-            g.add((subject, WEATHER.forecastHorizonDays, 
-                   Literal(data["forecast_horizon_days"], datatype=XSD.integer)))
-        
-        # source - create URI for the data source
-        if "source" in data:
-            source_uri = URIRef(WEATHER[f"source/{data['source']}"])
-            g.add((source_uri, RDF.type, WEATHER.DataSource))
-            g.add((subject, WEATHER.hasSource, source_uri))
+        # Add city type and properties
+        g.add((city_uri, RDF.type, WEATHER.City))
         
         # city name as literal (for display purposes)
         if "city" in data:
-            g.add((subject, SCHEMA.name, Literal(data["city"], datatype=XSD.string)))
+            g.add((city_uri, SCHEMA.name, Literal(data["city"], datatype=XSD.string)))
         
         # latitude (using standard geo vocabulary)
         if "latitude" in data:
-            g.add((subject, WGS.lat, 
+            g.add((city_uri, WGS.lat, 
                    Literal(data["latitude"], datatype=XSD.decimal)))
         
         # longitude (using standard geo vocabulary)
         if "longitude" in data:
-            g.add((subject, WGS.long, 
+            g.add((city_uri, WGS.long, 
                    Literal(data["longitude"], datatype=XSD.decimal)))
+        
+        # Create forecast URI as the main subject
+        # Use target_datetime or current timestamp to create unique forecast identifier
+        target_dt = data.get("target_datetime", "unknown")
+        forecast_horizon = data.get("forecast_horizon_days", 0)
+        forecast_id = f"{city_uri_part}_{target_dt}_D{forecast_horizon}"
+        forecast_uri = URIRef(WEATHER[f"forecast/{forecast_id}"])
+        
+        # Add forecast type
+        g.add((forecast_uri, RDF.type, WEATHER.Forecast))
+        
+        # Link forecast to city
+        g.add((forecast_uri, WEATHER.hasCity, city_uri))
+        
+        # fetch_datetime (metadata)
+        if "fetch_datetime" in data:
+            metadata_graph.add((forecast_uri, PROV.generatedAtTime, 
+                   Literal(data["fetch_datetime"], datatype=XSD.dateTime)))
+        
+        # target_datetime
+        if "target_datetime" in data:
+            g.add((forecast_uri, WEATHER.targetDateTime, 
+                   Literal(data["target_datetime"], datatype=XSD.dateTime)))
+        
+        # forecast_horizon_days
+        if "forecast_horizon_days" in data:
+            g.add((forecast_uri, WEATHER.forecastHorizonDays, 
+                   Literal(data["forecast_horizon_days"], datatype=XSD.integer)))
+        
+        # source - create URI for the data source (store in METADATA graph)
+        if "source" in data:
+            source_uri = URIRef(WEATHER[f"source/{data['source']}"])
+            metadata_graph.add((source_uri, RDF.type, WEATHER.DataSource))
+            g.add((forecast_uri, WEATHER.hasSource, source_uri))
         
         # temperature_celsius
         if "temperature_celsius" in data:
-            g.add((subject, WEATHER.temperatureCelsius, 
+            g.add((forecast_uri, WEATHER.temperatureCelsius, 
                    Literal(data["temperature_celsius"], datatype=XSD.decimal)))
         
         # description (optional field)
         if "description" in data:
-            g.add((subject, WEATHER.description, Literal(data["description"], datatype=XSD.string)))
+            g.add((forecast_uri, WEATHER.description, Literal(data["description"], datatype=XSD.string)))
         
-        # fetch_date (optional)
+        # fetch_date (metadata)
         if "fetch_date" in data:
-            g.add((subject, WEATHER.fetchDate, 
+            metadata_graph.add((forecast_uri, WEATHER.fetchDate, 
                    Literal(data["fetch_date"], datatype=XSD.date)))
         
         # target_date (optional)
         if "target_date" in data:
-            g.add((subject, WEATHER.targetDate, 
+            g.add((forecast_uri, WEATHER.targetDate, 
                    Literal(data["target_date"], datatype=XSD.date)))
         
-        return ds
+        return weather_ds, metadata_graph
         
     except Exception as e:
         print(f"Error processing {json_file_path}: {e}")
-        return None
+        return None, None
 
 
 def save_daily_rdf_file(graph, day_path, date_str):
     """
-    Save the consolidated RDF graph for a day to a TriG file.
+    Save the consolidated weather RDF graph for a day to a TriG file.
     
     Args:
-        graph: Dataset containing all forecasts for the day
+        graph: Dataset containing all weather forecasts for the day
         day_path: Path to the day directory
         date_str: Date string (YYYY-MM-DD) for naming the file
     """
@@ -143,11 +159,34 @@ def save_daily_rdf_file(graph, day_path, date_str):
         # Serialize to TriG format
         graph.serialize(destination=str(output_path), format='trig', encoding='utf-8')
         
-        print(f"  ✓ Created: {output_path}")
+        print(f"  ✓ Created weather KG: {output_path}")
         return str(output_path)
         
     except Exception as e:
-        print(f"Error saving RDF file: {e}")
+        print(f"Error saving weather RDF file: {e}")
+        return None
+
+
+def save_metadata_file(metadata_graph, day_path):
+    """
+    Save the metadata graph to a metadata.ttl file.
+    
+    Args:
+        metadata_graph: Graph containing all metadata
+        day_path: Path to the day directory
+    """
+    try:
+        # Determine output file path - save in the day directory
+        output_path = Path(day_path) / "metadata.ttl"
+        
+        # Serialize to Turtle format
+        metadata_graph.serialize(destination=str(output_path), format='turtle', encoding='utf-8')
+        
+        print(f"  ✓ Created metadata: {output_path}")
+        return str(output_path)
+        
+    except Exception as e:
+        print(f"Error saving metadata file: {e}")
         return None
 
 
@@ -188,13 +227,17 @@ def process_all_json_files(data_dir=DATA_DIR):
     print(f"Found {len(json_files)} JSON file(s) for {date_str}\n")
     print(f"Processing day: {date_str} ({len(json_files)} forecast(s))")
     
-    # Create a combined Dataset for all forecasts of this day
-    combined_graph = Dataset()
+    # Create a Dataset for weather data and a Graph for metadata
+    combined_weather_graph = Dataset()
+    combined_metadata_graph = Graph()
     
     # Bind namespaces for prettier output
-    combined_graph.bind("weather", WEATHER)
-    combined_graph.bind("xsd", XSD)
-    combined_graph.bind("schema", SCHEMA)
+    for ds in [combined_weather_graph, combined_metadata_graph]:
+        ds.bind("weather", WEATHER)
+        ds.bind("xsd", XSD)
+        ds.bind("schema", SCHEMA)
+        ds.bind("wgs", WGS)
+        ds.bind("prov", PROV)
     
     total_processed = 0
     total_failed = 0
@@ -203,22 +246,27 @@ def process_all_json_files(data_dir=DATA_DIR):
     for json_file in json_files:
         print(f"  - {json_file}")
         
-        # Transform JSON to RDF
-        rdf_graph = json_to_rdf(json_file)
+        # Transform JSON to RDF (returns both weather and metadata datasets)
+        weather_graph, metadata_graph = json_to_rdf(json_file)
         
-        if rdf_graph is not None:
-            # Merge this graph into the combined graph
-            # Iterate over quads (s, p, o, g) and add to the combined Dataset
-            for s, p, o, g in rdf_graph.quads():
-                combined_graph.add((s, p, o, g))
+        if weather_graph is not None and metadata_graph is not None:
+            # Merge weather data into the combined weather graph
+            for s, p, o, g in weather_graph.quads():
+                combined_weather_graph.add((s, p, o, g))
+            
+            # Merge metadata into the combined metadata graph (triples only)
+            for s, p, o in metadata_graph:
+                combined_metadata_graph.add((s, p, o))
+            
             total_processed += 1
         else:
             total_failed += 1
     
-    # Save the combined graph for today
+    # Save both graphs for today
     if total_processed > 0:
-        output_file = save_daily_rdf_file(combined_graph, day_path, date_str)
-        success = output_file is not None
+        weather_output = save_daily_rdf_file(combined_weather_graph, day_path, date_str)
+        metadata_output = save_metadata_file(combined_metadata_graph, day_path)
+        success = weather_output is not None and metadata_output is not None
     else:
         success = False
     
