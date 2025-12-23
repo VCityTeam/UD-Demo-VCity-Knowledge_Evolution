@@ -2,3 +2,4 @@ requests
 python-dotenv
 meteofrance-api
 rdflib
+flask
