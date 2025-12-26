@@ -7,32 +7,11 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=converg
-      - PGDATA=/var/lib/postgresql/data
     volumes:
       - pg-volume:/var/lib/postgresql/data
-    command: ["postgres", "-c", "log_duration=on", "-c", "log_statement=all", "-c", "log_destination=stderr,jsonlog", "-c", "logging_collector=on"]
 
-  postgres-test:
-    image: postgres@sha256:4ec37d2a07a0067f176fdcc9d4bb633a5724d2cc4f892c7a2046d054bb6939e5
-    ports:
-      - "5433:5432"
-    environment:
-      - POSTGRES_USER=postgres-test
-      - POSTGRES_PASSWORD=password-test
-      - POSTGRES_DB=converg-test
-    volumes:
-      - pg-volume-test:/var/lib/postgresql/data
-
-  blazegraph:
-    image: vcity/blazegraph-cors@sha256:c6f9556ca53ff01304557e349d2f10b3e121dae7230426f4c64fa42b2cbaf805
-    ports:
-      - "9999:8080"
-    container_name: blazegraph
-    environment:
-      - "BLAZEGRAPH_QUADS=true"
-
-  ud-quads-loader:
-    image: vcity/quads-loader@sha256:9ddb6b97427b0a6c973345ef5797e1f0fa5f8b1e456e8ef17ccd712d827896e8
+  quads-loader:
+    image: vcity/quads-loader
     depends_on:
       - postgres
     environment:
@@ -41,28 +20,40 @@ services:
       - "SPRING_DATASOURCE_PASSWORD=password"
     ports:
       - "8080:8080"
-    container_name: quads-loader
 
-  ud-quads-query:
-    build:
-      context: quads-query
-      dockerfile: Dockerfile
-      args:
-        - DATASOURCE_URL=jdbc:postgresql://postgres:5432/converg
-        - DATASOURCE_USERNAME=postgres
-        - DATASOURCE_PASSWORD=password
+  quads-query:
+    image: vcity/quads-query
     depends_on:
       - postgres
     environment:
       - "DATASOURCE_URL=jdbc:postgresql://postgres:5432/converg"
       - "DATASOURCE_USERNAME=postgres"
       - "DATASOURCE_PASSWORD=password"
+      - "CONDENSED_MODE=true"
     ports:
       - "8081:8081"
-    container_name: quads-query
+
+  quads-vizualizer:
+    image: vcity/quads-vizualizer
+    depends_on:
+      - quads-query
+      - quads-loader
+    ports:
+      - "80:80"
+    environment:
+      - "VITE_QUERY_ENDPOINT=http://localhost:8081/rdf/query"
+      - "VITE_LOADER_ENDPOINT=http://localhost:8080/import/metadata"
+
+  quads-creator:
+    image: hemoreg/weather-forecast
+    depends_on:
+      - quads-loader
+    environment:
+      - "QUADS_LOADER_URL=http://quads-loader:8080/"
+      - "MODE=server"
+    ports:
+      - "5000:5000"
 
 volumes:
   pg-volume:
-    driver: local
-  pg-volume-test:
     driver: local
