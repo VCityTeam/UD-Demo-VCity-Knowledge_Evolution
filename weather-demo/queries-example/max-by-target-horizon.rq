@@ -1,0 +1,12 @@
+PREFIX weather: <http://example.org/weather/>
+
+SELECT ?targetDate ?horizon (MAX(?temp) as ?maxtemp) WHERE {
+  GRAPH ?vng {
+  	?f1 weather:temperatureCelsius ?temp ;
+       weather:targetDate ?targetDate ;
+       weather:forecastHorizonDays ?horizon ;
+       weather:hasSource ?source .
+  }
+}
+GROUP BY ?targetDate ?horizon
+ORDER BY ?targetDate ?horizon

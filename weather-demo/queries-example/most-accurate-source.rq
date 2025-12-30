@@ -1,0 +1,18 @@
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX weather: <http://example.org/weather/>
+
+SELECT ?source ?horizon (AVG(?temp - ?ref) as ?avgo) WHERE {
+  GRAPH ?vng {
+  	?f1 weather:temperatureCelsius ?ref ;
+      weather:hasSource <http://example.org/weather/source/meteofrance> .
+  }
+  GRAPH ?vng2 {
+  	?f2 weather:temperatureCelsius ?temp ;
+       weather:hasSource ?source ;
+       weather:forecastHorizonDays ?horizon .
+  }
+  ?vng prov:atLocation ?location .
+  ?vng2 prov:atLocation ?location .
+
+  FILTER(?vng2 != ?vng)
+} GROUP BY ?source ?horizon

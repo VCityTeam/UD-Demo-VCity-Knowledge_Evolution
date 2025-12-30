@@ -1,0 +1,8 @@
+PREFIX weather: <http://example.org/weather/>
+
+SELECT (MAX(?temp) as ?maxtemp) WHERE {
+  GRAPH ?vng {
+  	?f1 weather:temperatureCelsius ?temp ;
+      weather:hasSource <http://example.org/weather/source/meteofrance> .
+  }
+} 
