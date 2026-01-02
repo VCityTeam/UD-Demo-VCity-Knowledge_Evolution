@@ -20,7 +20,7 @@ To reproduce this experiment locally, you need **Docker & Docker Compose** to ru
 
 ## 1. Infrastructure Setup
 
-File: [docker-compose.yml](https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution/tree/JOSS-ConVer-G-2/docker/docker-compose.yml).
+File: [docker-compose.yml](https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution/tree/JOSS-ConVer-G/docker/docker-compose.yml).
 Download the file and place it in a working directory.
 First, initialize the backend services defined in the `docker-compose.yml` file. This corresponds to the persistent storage layer of the ConVer-G architecture.
 
@@ -83,8 +83,8 @@ To run a query:
 2. Copy the content of one of the example query files into the SPARQL editor.
 3. Click the **Execute** button to run the query and view the results.
 
-The following example queries are available in the [Queries example](https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution/tree/JOSS-ConVer-G-2/weather-demo/queries-example) folder:
+The following example queries are available in the [Queries example](https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution/tree/JOSS-ConVer-G/weather-demo/queries-example) folder:
 
-- [max-by-target-horizon.rq](https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution/blob/JOSS-ConVer-G-2/weather-demo/queries-example/max-by-target-horizon.rq) computes the maximum temperature for each day and horizon.
-- [max-meteofrance.rq](https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution/blob/JOSS-ConVer-G-2/weather-demo/queries-example/max-meteofrance.rq) computes the maximum temperature for the MeteoFrance source.
-- [most-accurate-source.rq](https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution/blob/JOSS-ConVer-G-2/weather-demo/queries-example/most-accurate-source.rq) computes the most accurate source for each horizon.
+- [max-by-target-horizon.rq](https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution/blob/JOSS-ConVer-G/weather-demo/queries-example/max-by-target-horizon.rq) computes the maximum temperature for each day and horizon.
+- [max-meteofrance.rq](https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution/blob/JOSS-ConVer-G/weather-demo/queries-example/max-meteofrance.rq) computes the maximum temperature for the MeteoFrance source.
+- [most-accurate-source.rq](https://github.com/VCityTeam/UD-Demo-VCity-Knowledge_Evolution/blob/JOSS-ConVer-G/weather-demo/queries-example/most-accurate-source.rq) computes the most accurate source for each horizon.
