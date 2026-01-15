@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: quads-viz
-        image: vcity/quads-visualizer:qv-v1.6.2
+        image: vcity/quads-visualizer:qv-v1.6.3
         imagePullPolicy: Always
         env:
         - name: VITE_QUERY_ENDPOINT
