@@ -93,6 +93,29 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
+  name: quads-query-reasoning-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-pagoda3-prod #Automatisation des certificats let's encrypt
+spec:
+  tls:
+  - hosts:
+      - quaque-reasoning.ud-evolution.pagoda.liris.cnrs.fr
+    secretName: ud-evolution-quaque-reasoning-tls
+  rules:
+  - host: quaque-reasoning.ud-evolution.pagoda.liris.cnrs.fr
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: quads-query-reasoning
+            port:
+              number: 8081
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
   name: blazegraph-ingress
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-pagoda3-prod #Automatisation des certificats let's encrypt
