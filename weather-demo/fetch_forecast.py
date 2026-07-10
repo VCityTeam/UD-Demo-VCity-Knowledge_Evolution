@@ -3,8 +3,8 @@
 Weather Forecast Fetcher.
 
 This script fetches weather forecasts from multiple sources:
-- Open-Meteo: Free weather API with 3-day forecasts
-- OpenWeatherMap: Weather API with 3-day forecasts (requires API key)
+- Open-Meteo: Free weather API with 3-day forecasts + D0
+- OpenWeatherMap: Weather API with 3-day forecasts + D0 (requires API key)
 - Meteo France: Current observations (D0 forecasts)
 
 Data is saved in an organized folder structure: weather-data/YYYY/MM/DD/SOURCE-D#/
@@ -194,7 +194,7 @@ def get_forecast_open_meteo(city_name):
         for i, time_str in enumerate(hourly_times):
             dt = datetime.fromisoformat(time_str)
 
-            if dt.hour == 12 and dt.date() > fetch_date:
+            if dt.hour == 12 and dt.date() >= fetch_date:
                 temp = hourly_temps[i]
                 target_date = dt.date()
                 forecast_horizon = (target_date - fetch_date).days
@@ -268,7 +268,7 @@ def get_forecast_openweathermap(city_name, api_key):
             dt_txt = item["dt_txt"]
             dt = datetime.strptime(dt_txt, "%Y-%m-%d %H:%M:%S")
             
-            if dt.hour == 12 and dt.date() > fetch_date:
+            if dt.hour == 12 and dt.date() >= fetch_date:
                 temp = item["main"]["temp"]
                 desc = item["weather"][0]["description"]
                 target_date = dt.date()

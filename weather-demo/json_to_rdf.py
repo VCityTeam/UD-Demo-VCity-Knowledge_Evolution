@@ -11,7 +11,7 @@ import os
 import json
 from pathlib import Path
 from rdflib import Graph, Namespace, Literal, URIRef, Dataset
-from rdflib.namespace import RDF, XSD, WGS, PROV
+from rdflib.namespace import RDF, RDFS, XSD, WGS, PROV
 from datetime import datetime
 
 
@@ -20,9 +20,112 @@ WEATHER = Namespace("http://example.org/weather/")
 SCHEMA = Namespace("http://schema.org/")
 WEATHER_GRAPH = Namespace("http://example.org/weather/graphs/")
 
+# Named graph holding the RDFS vocabulary (TBox), shipped alongside the data
+ONTOLOGY_GRAPH_URI = URIRef(WEATHER_GRAPH["ontology"])
+
 # Configuration
 DATA_DIR = "weather-data"
 OUTPUT_EXTENSION = ".trig"
+
+# Datatype properties (domain weather:Forecast): (property, label, range)
+DATATYPE_PROPERTIES = [
+    (WEATHER.targetDateTime, "target date-time", XSD.dateTime),
+    (WEATHER.targetDate, "target date", XSD.date),
+    (WEATHER.fetchDate, "fetch date", XSD.date),
+    (WEATHER.forecastHorizonDays, "forecast horizon in days", XSD.integer),
+    (WEATHER.temperatureCelsius, "temperature in Celsius", XSD.decimal),
+    (WEATHER.description, "description", XSD.string),
+]
+
+
+def tbox_inference_triples():
+    """
+    Return the TBox triples that drive RDFS entailment (rdfs2/3/7/9):
+    rdfs:subClassOf, rdfs:subPropertyOf, rdfs:domain and rdfs:range.
+
+    They ship in the dedicated ontology named graph: the quads-query
+    entailment rewriter matches schema premises in any named graph and
+    intersects their version sets with the data graph's, so an inference
+    only holds in versions where both the instance triple and the axiom
+    exist (schema drift stops it).
+
+    They let an RDFS reasoner infer, among others:
+      - rdfs2/rdfs3: types of subjects/objects from property domains and ranges
+        (e.g. any resource with weather:temperatureCelsius is a weather:Forecast)
+      - rdfs7: weather:hasSource implies prov:wasAttributedTo
+      - rdfs9: every weather:City is also a wgs:SpatialThing and schema:City,
+        every weather:Forecast a prov:Entity, every weather:DataSource a prov:Agent
+
+    Returns:
+        list of (subject, predicate, object) triples
+    """
+    triples = [
+        # rdfs9: subClassOf
+        (WEATHER.City, RDFS.subClassOf, WGS.SpatialThing),
+        (WEATHER.City, RDFS.subClassOf, SCHEMA.City),
+        (WEATHER.Forecast, RDFS.subClassOf, PROV.Entity),
+        (WEATHER.DataSource, RDFS.subClassOf, PROV.Agent),
+        # rdfs7: subPropertyOf
+        (WEATHER.hasCity, RDFS.subPropertyOf, SCHEMA.spatialCoverage),
+        (WEATHER.hasSource, RDFS.subPropertyOf, PROV.wasAttributedTo),
+        (WEATHER.description, RDFS.subPropertyOf, SCHEMA.description),
+        # rdfs2/rdfs3: object property domains and ranges
+        (WEATHER.hasCity, RDFS.domain, WEATHER.Forecast),
+        (WEATHER.hasCity, RDFS.range, WEATHER.City),
+        (WEATHER.hasSource, RDFS.domain, WEATHER.Forecast),
+        (WEATHER.hasSource, RDFS.range, WEATHER.DataSource),
+    ]
+    for prop, _label, datatype in DATATYPE_PROPERTIES:
+        triples.append((prop, RDFS.domain, WEATHER.Forecast))
+        triples.append((prop, RDFS.range, datatype))
+    return triples
+
+
+def add_rdfs_ontology(dataset):
+    """
+    Add the full RDFS vocabulary (classes, properties, labels, comments
+    and the axioms from tbox_inference_triples) to the dataset, in a
+    dedicated named graph. Re-uploaded with every daily version, so the
+    axioms carry a version set the entailment rewriter can intersect
+    with the data graphs'.
+
+    Args:
+        dataset: Dataset the ontology named graph is added to
+    """
+    g = dataset.graph(ONTOLOGY_GRAPH_URI)
+
+    # --- Classes ---
+    g.add((WEATHER.City, RDF.type, RDFS.Class))
+    g.add((WEATHER.City, RDFS.label, Literal("City", lang="en")))
+    g.add((WEATHER.City, RDFS.comment,
+           Literal("A city for which weather forecasts are produced.", lang="en")))
+
+    g.add((WEATHER.Forecast, RDF.type, RDFS.Class))
+    g.add((WEATHER.Forecast, RDFS.label, Literal("Weather forecast", lang="en")))
+    g.add((WEATHER.Forecast, RDFS.comment,
+           Literal("A weather forecast for a city at a target date, "
+                   "produced by a data source.", lang="en")))
+
+    g.add((WEATHER.DataSource, RDF.type, RDFS.Class))
+    g.add((WEATHER.DataSource, RDFS.label, Literal("Data source", lang="en")))
+    g.add((WEATHER.DataSource, RDFS.comment,
+           Literal("A weather data provider (e.g. a forecast API).", lang="en")))
+
+    # --- Object properties ---
+    g.add((WEATHER.hasCity, RDF.type, RDF.Property))
+    g.add((WEATHER.hasCity, RDFS.label, Literal("has city", lang="en")))
+
+    g.add((WEATHER.hasSource, RDF.type, RDF.Property))
+    g.add((WEATHER.hasSource, RDFS.label, Literal("has source", lang="en")))
+
+    # --- Datatype properties ---
+    for prop, label, _datatype in DATATYPE_PROPERTIES:
+        g.add((prop, RDF.type, RDF.Property))
+        g.add((prop, RDFS.label, Literal(label, lang="en")))
+
+    # --- Axioms (subClassOf / subPropertyOf / domain / range) ---
+    for triple in tbox_inference_triples():
+        g.add(triple)
 
 
 def json_to_rdf(json_file_path):
@@ -51,6 +154,7 @@ def json_to_rdf(json_file_path):
             ds.bind("schema", SCHEMA)
             ds.bind("wgs", WGS)
             ds.bind("prov", PROV)
+            ds.bind("rdfs", RDFS)
         
         # Determine named graph URI
         source = data.get("source", "unknown")
@@ -59,7 +163,7 @@ def json_to_rdf(json_file_path):
         
         # Get the named graph for weather data
         g = weather_ds.graph(graph_name)
-        
+
         # Create city URI as an object
         city_name = data.get("city", "unknown")
         # Sanitize city name for URI (replace spaces and commas)
@@ -111,10 +215,12 @@ def json_to_rdf(json_file_path):
             g.add((forecast_uri, WEATHER.forecastHorizonDays, 
                    Literal(data["forecast_horizon_days"], datatype=XSD.integer)))
         
-        # source - create URI for the data source (store in METADATA graph)
+        # source - create URI for the data source; the rdf:type lives in the
+        # data graph so rdfs9 can derive prov:Agent (the rewriter skips the
+        # default/metadata graph and does not chain rdfs3 into rdfs9)
         if "source" in data:
             source_uri = URIRef(WEATHER[f"source/{data['source']}"])
-            metadata_graph.add((source_uri, RDF.type, WEATHER.DataSource))
+            g.add((source_uri, RDF.type, WEATHER.DataSource))
             g.add((forecast_uri, WEATHER.hasSource, source_uri))
         
         # temperature_celsius
@@ -238,6 +344,11 @@ def process_all_json_files(data_dir=DATA_DIR):
         ds.bind("schema", SCHEMA)
         ds.bind("wgs", WGS)
         ds.bind("prov", PROV)
+        ds.bind("rdfs", RDFS)
+
+    # Include the RDFS vocabulary as a dedicated named graph; the entailment
+    # rewriter matches its axioms across graphs and intersects version sets
+    add_rdfs_ontology(combined_weather_graph)
     
     total_processed = 0
     total_failed = 0
