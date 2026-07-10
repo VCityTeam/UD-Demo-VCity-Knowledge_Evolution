@@ -10,7 +10,7 @@ spec:
         spec:
           containers:
           - name: weather-forecast
-            image: harbor.pagoda.liris.cnrs.fr/ud-evolution/weather-forecast:v1.2.0
+            image: harbor.pagoda.liris.cnrs.fr/ud-evolution/weather-forecast:v1.3.0
             envFrom:
             - secretRef:
                 name: weather-forecast-secret
