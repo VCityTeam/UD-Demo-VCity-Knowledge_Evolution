@@ -22,6 +22,9 @@ spec:
         - name: VITE_LOADER_ENDPOINT
           value: "https://quader.ud-evolution.pagoda.liris.cnrs.fr/import/metadata"
         resources:
+          requests:
+            memory: "1Gi"
+            cpu: "0.5"
           limits:
             memory: "2Gi"
             cpu: "2"

@@ -26,11 +26,11 @@ spec:
           value: "32G"
         resources:
           requests:
-            memory: "16Gi"
-            cpu: "8"
+            memory: "1Gi"
+            cpu: "0.5"
           limits:
-            memory: "64Gi"
-            cpu: "32"
+            memory: "32Gi"
+            cpu: "8"
         ports:
         - containerPort: 8080
   volumeClaimTemplates:

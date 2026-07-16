@@ -36,11 +36,11 @@ spec:
           value: "false"
         resources:
           limits:
-            memory: "64Gi"
-            cpu: "32"
-          requests:
-            memory: "16Gi"
+            memory: "32Gi"
             cpu: "8"
+          requests:
+            memory: "1Gi"
+            cpu: "0.5"
         ports:
         - containerPort: 8080
         - containerPort: 9400

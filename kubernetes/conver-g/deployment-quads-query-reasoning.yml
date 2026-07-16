@@ -35,6 +35,9 @@ spec:
         - name: ENTAILMENT_REGIME
           value: "RDFS"
         resources:
+          requests:
+            memory: "1Gi"
+            cpu: "0.5"
           limits:
             memory: "8Gi"
             cpu: "8"

@@ -17,6 +17,9 @@ spec:
         image: harbor.pagoda.liris.cnrs.fr/ud-evolution/demo-versioning:v1.4.4
         imagePullPolicy: Always
         resources:
+          requests:
+            memory: "1Gi"
+            cpu: "0.5"
           limits:
             memory: "1Gi"
             cpu: "2"

@@ -33,6 +33,9 @@ spec:
               name: postgresql-db-secret
               key: DATASOURCE_URL
         resources:
+          requests:
+            memory: "1Gi"
+            cpu: "0.5"
           limits:
             memory: "8Gi"
             cpu: "8"
