@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: demo-versioning
-        image: harbor.pagoda.liris.cnrs.fr/ud-evolution/demo-versioning:v1.4.4
+        image: harbor.pagoda.liris.cnrs.fr/ud-evolution/demo-versioning:v1.5.0
         imagePullPolicy: Always
         resources:
           requests:
