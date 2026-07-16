@@ -1,0 +1,21 @@
+# Pure-inference query: no prov:* triple is ever asserted in the data graphs,
+# every match is derived by the RDFS entailment rewriter from the TBox shipped
+# in the weather:graphs/ontology named graph (run against quads-query-reasoning).
+#
+#   ?f a prov:Entity            <- rdfs9: weather:Forecast rdfs:subClassOf prov:Entity
+#   ?f prov:wasAttributedTo ?a  <- rdfs7: weather:hasSource rdfs:subPropertyOf prov:wasAttributedTo
+#   ?a a prov:Agent             <- rdfs9: weather:DataSource rdfs:subClassOf prov:Agent
+#
+# An inference only holds in versions where BOTH the instance triple and the
+# axiom exist: dropping an axiom from a later ontology upload (schema drift)
+# removes the corresponding rows for that version.
+PREFIX prov: <http://www.w3.org/ns/prov#>
+
+SELECT ?vng ?forecast ?agent WHERE {
+  GRAPH ?vng {
+    ?forecast a prov:Entity ;
+              prov:wasAttributedTo ?agent .
+    ?agent a prov:Agent .
+  }
+}
+ORDER BY ?vng ?forecast

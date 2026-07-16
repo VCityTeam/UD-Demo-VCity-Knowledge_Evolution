@@ -1,0 +1,16 @@
+# Pure-inference query: cities are only typed weather:City in the data graphs;
+# wgs:SpatialThing matches exist solely through
+#   weather:City rdfs:subClassOf wgs:SpatialThing   (rdfs9, subClassOf+ closure)
+# declared in the weather:graphs/ontology named graph.
+#
+# NB: rdflib serialises the W3C geo vocabulary with an https:// base
+# (https://www.w3.org/2003/01/geo/wgs84_pos#), so the query must use the
+# https form too — the canonical http:// URI matches nothing in this dataset.
+PREFIX wgs: <https://www.w3.org/2003/01/geo/wgs84_pos#>
+
+SELECT ?vng ?city WHERE {
+  GRAPH ?vng {
+    ?city a wgs:SpatialThing .
+  }
+}
+ORDER BY ?vng ?city
